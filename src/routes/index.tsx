@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
       { title: "JoyDesk — Comfort Meets Productivity" },
       { name: "description", content: "Premium office furniture, ergonomic chairs, standing desks, business laptops, monitors and accessories. Transform your workspace with JoyDesk." },
       { property: "og:title", content: "JoyDesk — Comfort Meets Productivity" },
-      { property: "og:description", content: "Premium office furniture and technology for modern teams." },
+      { property: "og:description", content: "Premium office furniture, ergonomic chairs, standing desks, business laptops, monitors and accessories. Transform your workspace with JoyDesk." },
       { property: "og:type", content: "website" },
     ],
   }),
