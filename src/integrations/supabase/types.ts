@@ -652,6 +652,8 @@ export type Database = {
           express_delivery_fee: number
           free_delivery_threshold: number
           id: string
+          mpesa_account_name: string | null
+          mpesa_paybill: string | null
           standard_delivery_fee: number
           store_name: string
           support_email: string | null
@@ -665,6 +667,8 @@ export type Database = {
           express_delivery_fee?: number
           free_delivery_threshold?: number
           id?: string
+          mpesa_account_name?: string | null
+          mpesa_paybill?: string | null
           standard_delivery_fee?: number
           store_name?: string
           support_email?: string | null
@@ -678,6 +682,8 @@ export type Database = {
           express_delivery_fee?: number
           free_delivery_threshold?: number
           id?: string
+          mpesa_account_name?: string | null
+          mpesa_paybill?: string | null
           standard_delivery_fee?: number
           store_name?: string
           support_email?: string | null
