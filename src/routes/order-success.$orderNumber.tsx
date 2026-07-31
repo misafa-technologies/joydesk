@@ -248,3 +248,123 @@ function Shell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+function MpesaStatus({
+  orderId,
+  orderNumber,
+  phone,
+  paid,
+}: {
+  orderId: string;
+  orderNumber: string;
+  phone: string;
+  paid: boolean;
+}) {
+  const qc = useQueryClient();
+  const check = useServerFn(checkMpesaPayment);
+  const start = useServerFn(startMpesaPayment);
+  const [retrying, setRetrying] = useState(false);
+
+  const { data: status } = useQuery({
+    queryKey: ["mpesa-status", orderId],
+    enabled: !paid,
+    refetchInterval: (query) => {
+      const s = query.state.data as { status?: string } | undefined;
+      return !s || s.status === "pending" ? 4000 : false;
+    },
+    queryFn: async () => {
+      const { data: payment } = await supabase
+        .from("payments")
+        .select("status, checkout_request_id, mpesa_receipt, result_desc")
+        .eq("order_id", orderId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!payment) return { status: "none" as const, message: "", receipt: null as string | null };
+      if (payment.status !== "pending") {
+        if (payment.status === "success") qc.invalidateQueries({ queryKey: ["order", orderNumber] });
+        return {
+          status: payment.status as "success" | "failed",
+          message: payment.result_desc ?? "",
+          receipt: payment.mpesa_receipt,
+        };
+      }
+      if (!payment.checkout_request_id) return { status: "pending" as const, message: "", receipt: null };
+
+      const res = (await check({ data: { checkoutRequestId: payment.checkout_request_id } })) as {
+        status: "pending" | "success" | "failed";
+        message: string;
+        receipt?: string | null;
+      };
+      if (res.status === "success") qc.invalidateQueries({ queryKey: ["order", orderNumber] });
+      return { status: res.status, message: res.message, receipt: res.receipt ?? null };
+    },
+  });
+
+  async function retry() {
+    setRetrying(true);
+    try {
+      const res = (await start({ data: { orderId, phone } })) as { customerMessage: string };
+      toast.success("STK push sent", { description: res.customerMessage });
+      qc.invalidateQueries({ queryKey: ["mpesa-status", orderId] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send the M-Pesa prompt");
+    } finally {
+      setRetrying(false);
+    }
+  }
+
+  const state = paid ? "success" : (status?.status ?? "pending");
+
+  return (
+    <div className="rounded-xl border border-border p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Payment status</h2>
+      {state === "success" ? (
+        <div className="mt-3 flex items-start gap-2 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+          <div>
+            <p className="font-semibold text-foreground">Payment received</p>
+            {status?.receipt && <p className="text-muted-foreground">M-Pesa receipt: {status.receipt}</p>}
+          </div>
+        </div>
+      ) : state === "failed" ? (
+        <div className="mt-3 space-y-3 text-sm">
+          <div className="flex items-start gap-2">
+            <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <div>
+              <p className="font-semibold text-foreground">Payment not completed</p>
+              <p className="text-muted-foreground">{status?.message || "The M-Pesa request was cancelled or timed out."}</p>
+            </div>
+          </div>
+          <button
+            onClick={retry}
+            disabled={retrying}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {retrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Retry M-Pesa payment
+          </button>
+        </div>
+      ) : state === "none" ? (
+        <div className="mt-3 space-y-3 text-sm">
+          <p className="text-muted-foreground">No M-Pesa request sent yet. Send an STK push to {phone}.</p>
+          <button
+            onClick={retry}
+            disabled={retrying}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {retrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Pay with M-Pesa
+          </button>
+        </div>
+      ) : (
+        <div className="mt-3 flex items-start gap-2 text-sm">
+          <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+          <div>
+            <p className="font-semibold text-foreground">Waiting for confirmation…</p>
+            <p className="text-muted-foreground">Enter your M-Pesa PIN on {phone}. This page updates automatically.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
