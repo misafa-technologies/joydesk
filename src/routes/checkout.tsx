@@ -144,6 +144,22 @@ function Checkout() {
       );
       if (itemsError) throw itemsError;
 
+      // Fire the order confirmation email/SMS (never block checkout on it).
+      notifyOrder({ data: { orderId: order.id } }).catch(() => undefined);
+
+      if (payment === "mpesa") {
+        try {
+          const res = (await startPayment({ data: { orderId: order.id, phone: normalized } })) as {
+            customerMessage: string;
+          };
+          toast.success("M-Pesa request sent", { description: res.customerMessage });
+        } catch (err) {
+          toast.warning("Order placed, but the M-Pesa prompt failed", {
+            description: err instanceof Error ? err.message : "You can retry payment on the next page.",
+          });
+        }
+      }
+
       cart.clear();
       navigate({ to: "/order-success/$orderNumber", params: { orderNumber: order.order_number } });
     } catch (err) {
