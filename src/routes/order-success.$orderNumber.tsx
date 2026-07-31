@@ -173,6 +173,14 @@ ${Number(order.discount) > 0 ? `<tr><td colspan="3">Discount</td><td>-${formatKE
 
         <aside className="space-y-4">
           {order.payment_method === "mpesa" && (
+            <MpesaStatus
+              orderId={order.id}
+              orderNumber={order.order_number}
+              phone={order.customer_phone}
+              paid={order.payment_status === "paid"}
+            />
+          )}
+          {order.payment_method === "mpesa" && (
             <div className="rounded-xl border border-border p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pay via M-Pesa</h2>
               <ol className="mt-3 space-y-1.5 text-sm text-muted-foreground">
