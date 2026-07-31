@@ -34,6 +34,8 @@ function Checkout() {
   const cart = useCart();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const startPayment = useServerFn(startMpesaPayment);
+  const notifyOrder = useServerFn(notifyOrderPlaced);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
