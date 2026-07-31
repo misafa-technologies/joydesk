@@ -153,7 +153,7 @@ function AdminProducts() {
           .split("\n")
           .map((s) => s.trim())
           .filter(Boolean),
-        specs,
+        specs: specs as Record<string, string>,
         tag: form.tag || null,
         is_featured: form.is_featured,
         is_active: form.is_active,
