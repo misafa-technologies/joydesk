@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -10,6 +11,8 @@ import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { formatKES, normalizeKenyanPhone } from "@/lib/format";
 import { COUNTY_NAMES, getSubCounties, getTowns } from "@/data/kenya-locations";
+import { startMpesaPayment } from "@/lib/mpesa.functions";
+import { notifyOrderPlaced } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
