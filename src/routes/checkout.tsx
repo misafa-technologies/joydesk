@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -10,6 +11,8 @@ import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { formatKES, normalizeKenyanPhone } from "@/lib/format";
 import { COUNTY_NAMES, getSubCounties, getTowns } from "@/data/kenya-locations";
+import { startMpesaPayment } from "@/lib/mpesa.functions";
+import { notifyOrderPlaced } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -31,6 +34,8 @@ function Checkout() {
   const cart = useCart();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const startPayment = useServerFn(startMpesaPayment);
+  const notifyOrder = useServerFn(notifyOrderPlaced);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -143,6 +148,22 @@ function Checkout() {
         })),
       );
       if (itemsError) throw itemsError;
+
+      // Fire the order confirmation email/SMS (never block checkout on it).
+      notifyOrder({ data: { orderId: order.id } }).catch(() => undefined);
+
+      if (payment === "mpesa") {
+        try {
+          const res = (await startPayment({ data: { orderId: order.id, phone: normalized } })) as {
+            customerMessage: string;
+          };
+          toast.success("M-Pesa request sent", { description: res.customerMessage });
+        } catch (err) {
+          toast.warning("Order placed, but the M-Pesa prompt failed", {
+            description: err instanceof Error ? err.message : "You can retry payment on the next page.",
+          });
+        }
+      }
 
       cart.clear();
       navigate({ to: "/order-success/$orderNumber", params: { orderNumber: order.order_number } });

@@ -196,6 +196,84 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_settings: {
+        Row: {
+          admin_notify_email: string | null
+          at_api_key: string | null
+          at_sandbox: boolean
+          at_sender_id: string | null
+          at_username: string | null
+          created_at: string
+          email_enabled: boolean
+          email_provider: string
+          from_email: string | null
+          from_name: string | null
+          id: string
+          notify_admin_new_order: boolean
+          notify_order_confirmation: boolean
+          notify_payment_received: boolean
+          notify_shipping_update: boolean
+          resend_api_key: string | null
+          sms_enabled: boolean
+          smtp_host: string | null
+          smtp_password: string | null
+          smtp_port: number | null
+          smtp_secure: boolean
+          smtp_user: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notify_email?: string | null
+          at_api_key?: string | null
+          at_sandbox?: boolean
+          at_sender_id?: string | null
+          at_username?: string | null
+          created_at?: string
+          email_enabled?: boolean
+          email_provider?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          notify_admin_new_order?: boolean
+          notify_order_confirmation?: boolean
+          notify_payment_received?: boolean
+          notify_shipping_update?: boolean
+          resend_api_key?: string | null
+          sms_enabled?: boolean
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean
+          smtp_user?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notify_email?: string | null
+          at_api_key?: string | null
+          at_sandbox?: boolean
+          at_sender_id?: string | null
+          at_username?: string | null
+          created_at?: string
+          email_enabled?: boolean
+          email_provider?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          notify_admin_new_order?: boolean
+          notify_order_confirmation?: boolean
+          notify_payment_received?: boolean
+          notify_shipping_update?: boolean
+          resend_api_key?: string | null
+          sms_enabled?: boolean
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean
+          smtp_user?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mpesa_config: {
         Row: {
           account_reference: string | null
@@ -249,6 +327,50 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Relationships: []
+      }
+      notification_logs: {
+        Row: {
+          channel: string
+          created_at: string
+          error: string | null
+          id: string
+          order_id: string | null
+          recipient: string
+          status: string
+          subject: string | null
+          template: string | null
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id?: string | null
+          recipient: string
+          status?: string
+          subject?: string | null
+          template?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id?: string | null
+          recipient?: string
+          status?: string
+          subject?: string | null
+          template?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -447,6 +569,7 @@ export type Database = {
           images: string[]
           is_active: boolean
           is_featured: boolean
+          low_stock_threshold: number
           name: string
           price: number
           rating: number
@@ -470,6 +593,7 @@ export type Database = {
           images?: string[]
           is_active?: boolean
           is_featured?: boolean
+          low_stock_threshold?: number
           name: string
           price?: number
           rating?: number
@@ -493,6 +617,7 @@ export type Database = {
           images?: string[]
           is_active?: boolean
           is_featured?: boolean
+          low_stock_threshold?: number
           name?: string
           price?: number
           rating?: number

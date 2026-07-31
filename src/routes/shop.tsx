@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
@@ -17,15 +17,26 @@ export const Route = createFileRoute("/shop")({
       { property: "og:type", content: "website" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    category: typeof s.category === "string" ? s.category : undefined,
+    brand: typeof s.brand === "string" ? s.brand : undefined,
+  }),
   component: Shop,
 });
 
 type SortKey = "newest" | "price-asc" | "price-desc" | "rating";
 
 function Shop() {
-  const [category, setCategory] = useState<string>("all");
+  const search = Route.useSearch();
+  const [category, setCategory] = useState<string>(search.category ?? "all");
+  const [brand, setBrand] = useState<string>(search.brand ?? "all");
   const [sort, setSort] = useState<SortKey>("newest");
   const [q, setQ] = useState("");
+
+  useEffect(() => {
+    if (search.category) setCategory(search.category);
+    if (search.brand) setBrand(search.brand);
+  }, [search.category, search.brand]);
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -36,14 +47,24 @@ function Shop() {
     },
   });
 
+  const { data: brands } = useQuery({
+    queryKey: ["brands"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("brands").select("id, name, slug").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", category, sort, q],
+    queryKey: ["products", category, brand, sort, q],
     queryFn: async () => {
       let query = supabase
         .from("products")
-        .select("id, slug, name, price, compare_price, images, rating, review_count, stock, tag, category_id")
+        .select("id, slug, name, price, compare_price, images, rating, review_count, stock, tag, category_id, brand_id")
         .eq("is_active", true);
       if (category !== "all") query = query.eq("category_id", category);
+      if (brand !== "all") query = query.eq("brand_id", brand);
       if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
       if (sort === "price-asc") query = query.order("price", { ascending: true });
       else if (sort === "price-desc") query = query.order("price", { ascending: false });
@@ -81,6 +102,18 @@ function Shop() {
             {categories?.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">All brands</option>
+            {brands?.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
               </option>
             ))}
           </select>
