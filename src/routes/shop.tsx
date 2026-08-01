@@ -57,7 +57,8 @@ function Shop() {
   });
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", category, brand, sort, q],
+    queryKey: ["products", category, brand, sort, q, categories],
+    enabled: category === "all" || !!categories,
     queryFn: async () => {
       let query = supabase
         .from("products")

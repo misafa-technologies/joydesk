@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useState } from "react";
 import { useRoles } from "@/hooks/use-role";
 import { cn } from "@/lib/utils";
-import { BadgePercent, Boxes, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Home, Loader2, Menu, MessageSquareText, PackageCheck, Settings, ShieldAlert, Star, Users, X } from "lucide-react";
+import { BadgePercent, Boxes, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Home, Loader2, Menu, PackageCheck, Settings, ShieldAlert, SlidersHorizontal, Star, Users, X } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -23,7 +23,8 @@ const NAV_ITEMS = [
   { to: "/admin/coupons", label: "Coupons", icon: BadgePercent },
   { to: "/admin/reviews", label: "Reviews", icon: Star },
   { to: "/admin/payments", label: "Payments", icon: CircleDollarSign },
-  { to: "/admin/orders", label: "Shipping", icon: PackageCheck },
+  { to: "/admin/shipping", label: "Shipping", icon: PackageCheck },
+  { to: "/admin/settings", label: "Store settings", icon: SlidersHorizontal },
   { to: "/admin/integrations", label: "Integrations", icon: Settings },
 ] as const;
 
