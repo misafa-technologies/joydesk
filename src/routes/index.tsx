@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Truck, ShieldCheck, Lock, Award, Building2, MapPin, Star } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import hero from "@/assets/hero-workspace.jpg";
 import catChairs from "@/assets/cat-chairs.jpg";
 import catDesks from "@/assets/cat-desks.jpg";
 import catLaptops from "@/assets/cat-laptops.jpg";
@@ -22,12 +21,12 @@ export const Route = createFileRoute("/")({
 });
 
 const CATEGORIES = [
-  { name: "Office Chairs", img: catChairs, count: "120+ products" },
-  { name: "Standing Desks", img: catDesks, count: "80+ products" },
-  { name: "Business Laptops", img: catLaptops, count: "60+ products" },
-  { name: "Monitors", img: catMonitors, count: "45+ products" },
-  { name: "Executive Chairs", img: catChairs, count: "40+ products" },
-  { name: "Accessories", img: catMonitors, count: "200+ products" },
+  { name: "Office Chairs", slug: "chairs", img: catChairs, count: "120+ products" },
+  { name: "Standing Desks", slug: "desks", img: catDesks, count: "80+ products" },
+  { name: "Business Laptops", slug: "laptops", img: catLaptops, count: "60+ products" },
+  { name: "Monitors", slug: "monitors", img: catMonitors, count: "45+ products" },
+  { name: "Executive Chairs", slug: "chairs", img: catChairs, count: "40+ products" },
+  { name: "Accessories", slug: "accessories", img: catMonitors, count: "200+ products" },
 ];
 
 const FEATURES = [
@@ -73,10 +72,10 @@ function Home() {
               Premium office furniture, ergonomic chairs, standing desks, business laptops, gaming rigs and accessories — engineered for teams that care about how they work.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">
+              <Link to="/shop" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">
                 Shop Now <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link to="/" className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground hover:bg-muted transition-colors">
+              <Link to="/quote" className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground hover:bg-muted transition-colors">
                 Request Quotation
               </Link>
             </div>
@@ -88,9 +87,8 @@ function Home() {
               <div><span className="text-xl font-semibold text-foreground">4.9★</span><br />Avg. rating</div>
             </div>
           </div>
-          <div className="relative">
-            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-primary/10 via-transparent to-secondary/10 blur-2xl" />
-            <img src={hero} alt="Modern JoyDesk workspace with ergonomic chair, standing desk, and dual monitors" width={1920} height={1200} className="relative rounded-2xl shadow-2xl aspect-[4/3] object-cover" />
+          <div className="grid grid-cols-2 gap-3">
+            {CATEGORIES.slice(0, 4).map((category, index) => <Link key={category.slug} to="/shop" search={{ category: category.slug }} className={`group relative overflow-hidden rounded-md border border-border bg-card ${index === 0 ? "col-span-2" : ""}`}><img src={category.img} alt={category.name} className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${index === 0 ? "h-56" : "h-40"}`} /><div className="absolute inset-x-0 bottom-0 bg-background/90 p-3 backdrop-blur-sm"><p className="text-sm font-semibold">{category.name}</p><p className="text-xs text-muted-foreground">{category.count}</p></div></Link>)}
           </div>
         </div>
       </section>
@@ -102,19 +100,19 @@ function Home() {
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">Shop by category</h2>
             <p className="mt-2 text-muted-foreground">Everything your workspace needs, curated.</p>
           </div>
-          <Link to="/" className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-primary hover:gap-2 transition-all">
+          <Link to="/categories" className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-primary hover:gap-2 transition-all">
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {CATEGORIES.map((c) => (
-            <a key={c.name} href="#" className="group rounded-2xl border border-border bg-card p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            <Link key={c.name} to="/shop" search={{ category: c.slug }} className="group rounded-md border border-border bg-card p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
               <div className="aspect-square overflow-hidden rounded-xl bg-muted/40">
                 <img src={c.img} alt={c.name} loading="lazy" width={800} height={800} className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500" />
               </div>
               <h3 className="mt-3 text-sm font-semibold">{c.name}</h3>
               <p className="text-xs text-muted-foreground">{c.count}</p>
-            </a>
+            </Link>
           ))}
         </div>
       </section>

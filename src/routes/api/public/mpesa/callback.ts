@@ -19,19 +19,23 @@ export const Route = createFileRoute("/api/public/mpesa/callback")({
 
           const checkoutRequestId = String(cb["CheckoutRequestID"] ?? "");
           if (!checkoutRequestId) return ack;
-          const resultCode = String(cb["ResultCode"] ?? "");
-          const resultDesc = String(cb["ResultDesc"] ?? "");
-
           const meta = (cb["CallbackMetadata"] as { Item?: { Name: string; Value?: unknown }[] } | undefined)?.Item ?? [];
           const receipt = meta.find((i) => i.Name === "MpesaReceiptNumber")?.Value;
 
-          const { applyPaymentResult } = await import("@/lib/mpesa.server");
+          // Treat the callback as a notification only. Query Daraja directly before
+          // changing payment state so a forged public request cannot settle an order.
+          const { applyPaymentResult, loadMpesaConfig, stkQuery } = await import("@/lib/mpesa.server");
+          const cfg = await loadMpesaConfig();
+          const verified = await stkQuery(cfg, checkoutRequestId);
+          const resultCode = String(verified["ResultCode"] ?? "");
+          const resultDesc = String(verified["ResultDesc"] ?? cb["ResultDesc"] ?? "");
+          if (!resultCode) return ack;
           const applied = await applyPaymentResult({
             checkoutRequestId,
             resultCode,
             resultDesc,
             receipt: receipt ? String(receipt) : null,
-            raw: payload,
+            raw: { callback: payload, verification: verified },
           });
 
           if (applied.success && applied.orderId && !applied.alreadyHandled) {

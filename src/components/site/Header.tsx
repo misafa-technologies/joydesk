@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, ShoppingCart, Heart, User, Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCart } from "@/hooks/use-cart";
 import { useRoles } from "@/hooks/use-role";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ export function Header() {
   const [term, setTerm] = useState("");
   const cart = useCart();
   const { user, isStaff } = useRoles();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   function submitSearch(e: React.FormEvent) {
@@ -93,8 +95,10 @@ export function Header() {
               </Link>
               <button
                 onClick={async () => {
+                  await queryClient.cancelQueries();
+                  queryClient.clear();
                   await supabase.auth.signOut();
-                  navigate({ to: "/" });
+                  navigate({ to: "/auth", replace: true });
                 }}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
                 aria-label="Sign out"
@@ -161,9 +165,11 @@ export function Header() {
                 </Link>
                 <button
                   onClick={async () => {
+                    await queryClient.cancelQueries();
+                    queryClient.clear();
                     await supabase.auth.signOut();
                     setOpen(false);
-                    navigate({ to: "/" });
+                    navigate({ to: "/auth", replace: true });
                   }}
                   className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-muted"
                 >

@@ -20,6 +20,7 @@ export const Route = createFileRoute("/shop")({
   validateSearch: (s: Record<string, unknown>) => ({
     category: typeof s.category === "string" ? s.category : undefined,
     brand: typeof s.brand === "string" ? s.brand : undefined,
+    q: typeof s.q === "string" ? s.q.slice(0, 100) : undefined,
   }),
   component: Shop,
 });
@@ -31,12 +32,13 @@ function Shop() {
   const [category, setCategory] = useState<string>(search.category ?? "all");
   const [brand, setBrand] = useState<string>(search.brand ?? "all");
   const [sort, setSort] = useState<SortKey>("newest");
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(search.q ?? "");
 
   useEffect(() => {
     if (search.category) setCategory(search.category);
     if (search.brand) setBrand(search.brand);
-  }, [search.category, search.brand]);
+    if (search.q !== undefined) setQ(search.q);
+  }, [search.category, search.brand, search.q]);
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -57,13 +59,17 @@ function Shop() {
   });
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", category, brand, sort, q],
+    queryKey: ["products", category, brand, sort, q, categories],
+    enabled: category === "all" || !!categories,
     queryFn: async () => {
       let query = supabase
         .from("products")
         .select("id, slug, name, price, compare_price, images, rating, review_count, stock, tag, category_id, brand_id")
         .eq("is_active", true);
-      if (category !== "all") query = query.eq("category_id", category);
+      if (category !== "all") {
+        const categoryId = categories?.find((item) => item.id === category || item.slug === category)?.id;
+        if (categoryId) query = query.eq("category_id", categoryId);
+      }
       if (brand !== "all") query = query.eq("brand_id", brand);
       if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
       if (sort === "price-asc") query = query.order("price", { ascending: true });

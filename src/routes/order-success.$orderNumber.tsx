@@ -84,7 +84,7 @@ function OrderSuccess() {
       ...items.map((i) => `• ${i.quantity} × ${i.product_name} — ${formatKES(Number(i.unit_price) * i.quantity)}`),
       "",
       `Total: ${formatKES(order.total)}`,
-      `Payment: ${order.payment_method === "mpesa" ? `M-Pesa Paybill ${paybill} (Acc: ${order.order_number})` : "Pay on delivery"}`,
+      `Payment: M-Pesa Paybill ${paybill} (Acc: ${order.order_number})`,
       order.county ? `Deliver to: ${order.street}, ${order.town}, ${order.sub_county}, ${order.county}` : "Store pickup",
       "",
       "Here is my payment confirmation / follow-up.",
@@ -121,7 +121,7 @@ ${Number(order.discount) > 0 ? `<tr><td colspan="3">Discount</td><td>-${formatKE
 <tr><td colspan="3">Delivery (${order.delivery_method})</td><td>${formatKES(order.delivery_fee)}</td></tr>
 <tr><td colspan="3">Total</td><td>${formatKES(order.total)}</td></tr>
 </tfoot></table>
-<p class="muted">Payment: ${order.payment_method === "mpesa" ? `M-Pesa Paybill ${paybill}, Account ${order.order_number}` : "Pay on delivery"} · Status: ${order.payment_status}</p>
+<p class="muted">Payment: M-Pesa Paybill ${paybill}, Account ${order.order_number} · Status: ${order.payment_status}</p>
 </body></html>`;
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
