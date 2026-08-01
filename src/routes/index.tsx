@@ -21,11 +21,11 @@ export const Route = createFileRoute("/")({
 });
 
 const CATEGORIES = [
-  { name: "Office Chairs", slug: "office-chairs", img: catChairs, count: "120+ products" },
-  { name: "Standing Desks", slug: "standing-desks", img: catDesks, count: "80+ products" },
-  { name: "Business Laptops", slug: "business-laptops", img: catLaptops, count: "60+ products" },
+  { name: "Office Chairs", slug: "chairs", img: catChairs, count: "120+ products" },
+  { name: "Standing Desks", slug: "desks", img: catDesks, count: "80+ products" },
+  { name: "Business Laptops", slug: "laptops", img: catLaptops, count: "60+ products" },
   { name: "Monitors", slug: "monitors", img: catMonitors, count: "45+ products" },
-  { name: "Executive Chairs", slug: "executive-chairs", img: catChairs, count: "40+ products" },
+  { name: "Executive Chairs", slug: "chairs", img: catChairs, count: "40+ products" },
   { name: "Accessories", slug: "accessories", img: catMonitors, count: "200+ products" },
 ];
 

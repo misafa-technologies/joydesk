@@ -54,9 +54,9 @@ function AdminShipping() {
     if (!selectedOrder || !form.tracking_number.trim()) return toast.error("Choose an order and enter a tracking number");
     setSaving(true);
     const existing = data?.shipments.find((item) => item.order_id === selectedOrder);
+    const history = [...(Array.isArray(existing?.history) ? existing.history : []), { status: form.status, location: form.current_location.trim(), at: new Date().toISOString() }];
     const payload = { order_id: selectedOrder, tracking_number: form.tracking_number.trim(), courier: form.courier.trim() || null,
-      status: form.status, current_location: form.current_location.trim() || null, estimated_delivery: form.estimated_delivery || null,
-      history: [{ status: form.status, location: form.current_location.trim(), at: new Date().toISOString() }] };
+      status: form.status, current_location: form.current_location.trim() || null, estimated_delivery: form.estimated_delivery || null, history };
     const shipmentResult = existing
       ? await supabase.from("shipments").update(payload).eq("id", existing.id)
       : await supabase.from("shipments").insert(payload);

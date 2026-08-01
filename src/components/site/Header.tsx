@@ -22,6 +22,7 @@ export function Header() {
   const [term, setTerm] = useState("");
   const cart = useCart();
   const { user, isStaff } = useRoles();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   function submitSearch(e: React.FormEvent) {
@@ -93,8 +94,10 @@ export function Header() {
               </Link>
               <button
                 onClick={async () => {
+                  await queryClient.cancelQueries();
+                  queryClient.clear();
                   await supabase.auth.signOut();
-                  navigate({ to: "/" });
+                  navigate({ to: "/auth", replace: true });
                 }}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
                 aria-label="Sign out"
@@ -161,9 +164,11 @@ export function Header() {
                 </Link>
                 <button
                   onClick={async () => {
+                    await queryClient.cancelQueries();
+                    queryClient.clear();
                     await supabase.auth.signOut();
                     setOpen(false);
-                    navigate({ to: "/" });
+                    navigate({ to: "/auth", replace: true });
                   }}
                   className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-muted"
                 >

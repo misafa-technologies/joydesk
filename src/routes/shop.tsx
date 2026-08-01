@@ -20,6 +20,7 @@ export const Route = createFileRoute("/shop")({
   validateSearch: (s: Record<string, unknown>) => ({
     category: typeof s.category === "string" ? s.category : undefined,
     brand: typeof s.brand === "string" ? s.brand : undefined,
+    q: typeof s.q === "string" ? s.q.slice(0, 100) : undefined,
   }),
   component: Shop,
 });
@@ -31,12 +32,13 @@ function Shop() {
   const [category, setCategory] = useState<string>(search.category ?? "all");
   const [brand, setBrand] = useState<string>(search.brand ?? "all");
   const [sort, setSort] = useState<SortKey>("newest");
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(search.q ?? "");
 
   useEffect(() => {
     if (search.category) setCategory(search.category);
     if (search.brand) setBrand(search.brand);
-  }, [search.category, search.brand]);
+    if (search.q !== undefined) setQ(search.q);
+  }, [search.category, search.brand, search.q]);
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],

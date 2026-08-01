@@ -9,6 +9,10 @@ export const Route = createFileRoute("/admin")({
     meta: [
       { title: "Admin — JoyDesk" },
       { name: "description", content: "JoyDesk staff dashboard for managing products, orders, customers and store settings." },
+      { property: "og:title", content: "Admin — JoyDesk" },
+      { property: "og:description", content: "JoyDesk staff dashboard for store operations." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
