@@ -63,7 +63,10 @@ function Shop() {
         .from("products")
         .select("id, slug, name, price, compare_price, images, rating, review_count, stock, tag, category_id, brand_id")
         .eq("is_active", true);
-      if (category !== "all") query = query.eq("category_id", category);
+      if (category !== "all") {
+        const categoryId = categories?.find((item) => item.id === category || item.slug === category)?.id;
+        if (categoryId) query = query.eq("category_id", categoryId);
+      }
       if (brand !== "all") query = query.eq("brand_id", brand);
       if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
       if (sort === "price-asc") query = query.order("price", { ascending: true });
