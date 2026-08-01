@@ -48,7 +48,7 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Welcome back!");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -57,7 +57,12 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created", { description: "You can now shop and track your orders." });
+        if (!data.session) {
+          toast.success("Check your email", { description: "Confirm your email address, then sign in to JoyDesk." });
+          setMode("login");
+          return;
+        }
+        toast.success("Account created");
       }
       navigate({ to: redirect ?? "/account", replace: true });
     } catch (err) {

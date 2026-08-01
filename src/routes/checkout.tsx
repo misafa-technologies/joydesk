@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Checkout — JoyDesk" },
-      { name: "description", content: "Choose delivery across all Kenyan counties, apply a coupon and pay by M-Pesa Paybill or on delivery." },
+      { name: "description", content: "Choose delivery across Kenya, apply a coupon and complete payment securely with M-Pesa Express." },
       { property: "og:title", content: "Checkout — JoyDesk" },
       { property: "og:description", content: "Nationwide delivery, coupons and M-Pesa payment." },
       { property: "og:type", content: "website" },
@@ -46,7 +46,6 @@ function Checkout() {
   const [street, setStreet] = useState("");
   const [notes, setNotes] = useState("");
   const [delivery, setDelivery] = useState<Delivery>("standard");
-  const [payment, setPayment] = useState<"mpesa" | "cod">("mpesa");
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -59,6 +58,28 @@ function Checkout() {
       return data;
     },
   });
+
+  const { data: savedAddresses } = useQuery({
+    queryKey: ["checkout-addresses", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("addresses").select("*").order("is_default", { ascending: false }).order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  useEffect(() => {
+    const selected = savedAddresses?.find((item) => item.is_default) ?? savedAddresses?.[0];
+    if (!selected) return;
+    setName((value) => value || selected.recipient_name);
+    setPhone((value) => value || selected.phone);
+    setCounty((value) => value || selected.county);
+    setSubCounty((value) => value || selected.sub_county || "");
+    setTown((value) => value || selected.town || "");
+    setStreet((value) => value || selected.street || "");
+    setNotes((value) => value || selected.notes || "");
+  }, [savedAddresses]);
 
   const standardFee = Number(settings?.standard_delivery_fee ?? 500);
   const expressFee = Number(settings?.express_delivery_fee ?? 1200);
@@ -119,7 +140,7 @@ function Checkout() {
           customer_email: email.trim() || user.email,
           customer_phone: normalized,
           status: "pending",
-          payment_method: payment,
+          payment_method: "mpesa",
           payment_status: "pending",
           delivery_method: delivery,
           delivery_fee: deliveryFee,
@@ -152,17 +173,13 @@ function Checkout() {
       // Fire the order confirmation email/SMS (never block checkout on it).
       notifyOrder({ data: { orderId: order.id } }).catch(() => undefined);
 
-      if (payment === "mpesa") {
-        try {
-          const res = (await startPayment({ data: { orderId: order.id, phone: normalized } })) as {
-            customerMessage: string;
-          };
-          toast.success("M-Pesa request sent", { description: res.customerMessage });
-        } catch (err) {
-          toast.warning("Order placed, but the M-Pesa prompt failed", {
-            description: err instanceof Error ? err.message : "You can retry payment on the next page.",
-          });
-        }
+      try {
+        const res = (await startPayment({ data: { orderId: order.id, phone: normalized } })) as { customerMessage: string };
+        toast.success("M-Pesa request sent", { description: res.customerMessage });
+      } catch (err) {
+        toast.warning("Order saved, but the M-Pesa prompt could not be sent", {
+          description: err instanceof Error ? err.message : "You can retry payment on the next page.",
+        });
       }
 
       cart.clear();
@@ -229,6 +246,7 @@ function Checkout() {
 
           {delivery !== "pickup" && (
             <Section title="Shipping address">
+              {!!savedAddresses?.length && <label className="mb-4 block"><span className="mb-1.5 block text-sm font-medium">Saved address</span><select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" defaultValue={(savedAddresses.find((item) => item.is_default) ?? savedAddresses[0])?.id} onChange={(e) => { const selected = savedAddresses.find((item) => item.id === e.target.value); if (!selected) return; setName(selected.recipient_name); setPhone(selected.phone); setCounty(selected.county); setSubCounty(selected.sub_county ?? ""); setTown(selected.town ?? ""); setStreet(selected.street ?? ""); setNotes(selected.notes ?? ""); }}>{savedAddresses.map((item) => <option key={item.id} value={item.id}>{item.label || "Address"}{item.is_default ? " · Default" : ""} — {item.town}, {item.county}</option>)}</select></label>}
               <div className="grid gap-4 sm:grid-cols-2">
                 <Select
                   label="County"
@@ -274,25 +292,10 @@ function Checkout() {
           )}
 
           <Section title="Payment">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setPayment("mpesa")}
-                className={`rounded-lg border p-4 text-left ${payment === "mpesa" ? "border-primary bg-primary/5" : "border-border"}`}
-              >
-                <div className="text-sm font-semibold">M-Pesa Paybill</div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Paybill {settings?.mpesa_paybill ?? "—"} · Account {settings?.mpesa_account_name ?? "JoyDesk"}
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPayment("cod")}
-                className={`rounded-lg border p-4 text-left ${payment === "cod" ? "border-primary bg-primary/5" : "border-border"}`}
-              >
-                <div className="text-sm font-semibold">Pay on delivery</div>
-                <div className="mt-1 text-xs text-muted-foreground">Cash or M-Pesa when your order arrives</div>
-              </button>
+            <div className="rounded-md border border-primary bg-primary/5 p-4">
+              <div className="text-sm font-semibold">M-Pesa Express</div>
+              <div className="mt-1 text-xs text-muted-foreground">An STK prompt will be sent to the phone above. Complete it with your M-Pesa PIN; payment status updates automatically.</div>
+              {settings?.mpesa_paybill && <div className="mt-3 text-xs font-medium">Paybill {settings.mpesa_paybill} · {settings.mpesa_account_name ?? "JoyDesk"}</div>}
             </div>
           </Section>
         </div>
@@ -337,7 +340,7 @@ function Checkout() {
             disabled={busy || cart.items.length === 0}
             className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
-            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Place order
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Pay {formatKES(total)} with M-Pesa
           </button>
         </aside>
       </form>

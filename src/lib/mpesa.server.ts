@@ -67,7 +67,8 @@ export async function stkPush(params: {
   const { cfg, phone, amount, accountReference, description } = params;
   const token = await getAccessToken(cfg);
   const ts = timestamp();
-  const shortCode = cfg.short_code!;
+  const shortCode = cfg.short_code;
+  if (!shortCode || !cfg.passkey || !cfg.callback_url) throw new Error("M-Pesa configuration is incomplete.");
   const password = b64(`${shortCode}${cfg.passkey}${ts}`);
   const transactionType = cfg.mode === "till" ? "CustomerBuyGoodsOnline" : "CustomerPayBillOnline";
 
@@ -113,7 +114,8 @@ export async function stkPush(params: {
 export async function stkQuery(cfg: MpesaConfig, checkoutRequestId: string) {
   const token = await getAccessToken(cfg);
   const ts = timestamp();
-  const shortCode = cfg.short_code!;
+  const shortCode = cfg.short_code;
+  if (!shortCode || !cfg.passkey) throw new Error("M-Pesa configuration is incomplete.");
   const res = await fetch(`${baseUrl(cfg.environment)}/mpesa/stkpushquery/v1/query`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -126,7 +128,9 @@ export async function stkQuery(cfg: MpesaConfig, checkoutRequestId: string) {
   });
   const text = await res.text();
   try {
-    return JSON.parse(text) as Record<string, string>;
+    const json = JSON.parse(text) as Record<string, string>;
+    if (!res.ok) throw new Error(json["errorMessage"] ?? `Daraja query failed [${res.status}]`);
+    return json;
   } catch {
     throw new Error(`Daraja query returned a non-JSON response [${res.status}]: ${text}`);
   }
