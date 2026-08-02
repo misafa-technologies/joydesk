@@ -2,13 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { CheckCircle2, Download, MessageCircle, Truck, Loader2, XCircle, RefreshCw } from "lucide-react";
+import { CheckCircle2, Download, MessageCircle, Truck, Loader2, XCircle, RefreshCw, Printer, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { formatKES, formatDateTime } from "@/lib/format";
 import { checkMpesaPayment, startMpesaPayment } from "@/lib/mpesa.functions";
+import { downloadReceipt as downloadReceiptFile, printReceipt } from "@/lib/receipt";
+import { paymentLink, trackingLink } from "@/lib/site";
 
 export const Route = createFileRoute("/order-success/$orderNumber")({
   head: ({ params }) => ({
@@ -45,8 +47,17 @@ function OrderSuccess() {
         .maybeSingle();
       if (error) throw error;
       if (!order) return null;
-      const { data: items } = await supabase.from("order_items").select("*").eq("order_id", order.id);
-      return { order, items: items ?? [] };
+      const [{ data: items }, { data: payment }] = await Promise.all([
+        supabase.from("order_items").select("*").eq("order_id", order.id),
+        supabase
+          .from("payments")
+          .select("mpesa_receipt, status")
+          .eq("order_id", order.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      return { order, items: items ?? [], payment };
     },
   });
 
@@ -72,7 +83,7 @@ function OrderSuccess() {
     );
   }
 
-  const { order, items } = data;
+  const { order, items, payment } = data;
   const paybill = settings?.mpesa_paybill ?? "400200";
   const accountName = settings?.mpesa_account_name ?? "JoyDesk";
   const whatsapp = (settings?.whatsapp_number ?? "254700000000").replace(/\D/g, "");
@@ -85,10 +96,13 @@ function OrderSuccess() {
       "",
       `Total: ${formatKES(order.total)}`,
       `Payment: M-Pesa Paybill ${paybill} (Acc: ${order.order_number})`,
+      order.payment_status !== "paid" ? `Pay online: ${paymentLink(order.order_number)}` : "",
       order.county ? `Deliver to: ${order.street}, ${order.town}, ${order.sub_county}, ${order.county}` : "Store pickup",
       "",
       "Here is my payment confirmation / follow-up.",
-    ].join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n"),
   );
 
   const mpesaJson = JSON.stringify(
@@ -100,37 +114,23 @@ function OrderSuccess() {
       currency: "KES",
       reference: order.order_number,
       whatsapp_followup: `https://wa.me/${whatsapp}`,
+      payment_link: paymentLink(order.order_number),
+      track_link: trackingLink(order.order_number),
     },
     null,
     2,
   );
 
-  function downloadReceipt() {
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Receipt ${order.order_number}</title>
-<style>body{font-family:ui-sans-serif,system-ui,Arial;padding:32px;color:#111}h1{color:#0F4C81;margin:0 0 4px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;font-size:14px}tfoot td{font-weight:700;border:none}.muted{color:#666;font-size:13px}</style>
-</head><body>
-<h1>JoyDesk</h1><div class="muted">Comfort Meets Productivity</div>
-<h2>Receipt · ${order.order_number}</h2>
-<p class="muted">${formatDateTime(order.created_at)}<br/>${order.customer_name} · ${order.customer_phone}${order.customer_email ? ` · ${order.customer_email}` : ""}</p>
-<p class="muted">${order.county ? `${order.street ?? ""}, ${order.town ?? ""}, ${order.sub_county ?? ""}, ${order.county}` : "Store pickup"}</p>
-<table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>
-${items.map((i) => `<tr><td>${i.product_name}</td><td>${i.quantity}</td><td>${formatKES(i.unit_price)}</td><td>${formatKES(Number(i.unit_price) * i.quantity)}</td></tr>`).join("")}
-</tbody><tfoot>
-<tr><td colspan="3">Subtotal</td><td>${formatKES(order.subtotal)}</td></tr>
-${Number(order.discount) > 0 ? `<tr><td colspan="3">Discount</td><td>-${formatKES(order.discount)}</td></tr>` : ""}
-<tr><td colspan="3">Delivery (${order.delivery_method})</td><td>${formatKES(order.delivery_fee)}</td></tr>
-<tr><td colspan="3">Total</td><td>${formatKES(order.total)}</td></tr>
-</tfoot></table>
-<p class="muted">Payment: M-Pesa Paybill ${paybill}, Account ${order.order_number} · Status: ${order.payment_status}</p>
-</body></html>`;
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `JoyDesk-Receipt-${order.order_number}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  const receiptBrand = {
+    storeName: settings?.store_name,
+    tagline: settings?.tagline,
+    supportPhone: settings?.support_phone,
+    supportEmail: settings?.support_email,
+    paybill,
+    receipt: payment?.mpesa_receipt,
+  };
+  const isPaid = order.payment_status === "paid";
+  const isFailed = order.payment_status === "failed";
 
   return (
     <Shell>
@@ -210,12 +210,39 @@ ${Number(order.discount) > 0 ? `<tr><td colspan="3">Discount</td><td>-${formatKE
             <MessageCircle className="h-4 w-4" /> Follow up on WhatsApp
           </a>
 
-          <button
-            onClick={downloadReceipt}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted"
-          >
-            <Download className="h-4 w-4" /> Download receipt
-          </button>
+          {isPaid ? (
+            <>
+              <button
+                onClick={() => printReceipt(order, items, receiptBrand)}
+                className="flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted"
+              >
+                <Printer className="h-4 w-4" /> Print receipt
+              </button>
+              <button
+                onClick={() => downloadReceiptFile(order, items, receiptBrand)}
+                className="flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted"
+              >
+                <Download className="h-4 w-4" /> Download receipt
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => downloadReceiptFile(order, items, receiptBrand)}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted"
+            >
+              <Download className="h-4 w-4" /> Download invoice
+            </button>
+          )}
+
+          {isFailed && (
+            <Link
+              to="/pay/$orderNumber"
+              params={{ orderNumber: order.order_number }}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              <CreditCard className="h-4 w-4" /> Complete payment
+            </Link>
+          )}
 
           <Link
             to="/track"
@@ -337,13 +364,22 @@ function MpesaStatus({
               <p className="text-muted-foreground">{status?.message || "The M-Pesa request was cancelled or timed out."}</p>
             </div>
           </div>
-          <button
-            onClick={retry}
-            disabled={retrying}
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-          >
-            {retrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Retry M-Pesa payment
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={retry}
+              disabled={retrying}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {retrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Retry M-Pesa payment
+            </button>
+            <Link
+              to="/pay/$orderNumber"
+              params={{ orderNumber }}
+              className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-muted"
+            >
+              Complete payment
+            </Link>
+          </div>
         </div>
       ) : state === "none" ? (
         <div className="mt-3 space-y-3 text-sm">

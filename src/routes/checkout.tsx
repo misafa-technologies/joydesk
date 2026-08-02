@@ -130,6 +130,24 @@ function Checkout() {
 
     setBusy(true);
     try {
+      // Re-check live stock before creating the order (the DB also enforces this).
+      const { data: stockRows, error: stockError } = await supabase
+        .from("products")
+        .select("id, name, stock")
+        .in("id", cart.items.map((i) => i.id));
+      if (stockError) throw stockError;
+      const short = cart.items
+        .map((i) => ({ item: i, row: stockRows?.find((s) => s.id === i.id) }))
+        .filter(({ item, row }) => row && row.stock < item.quantity);
+      if (short.length) {
+        setBusy(false);
+        return toast.error("Some items are out of stock", {
+          description: short
+            .map(({ item, row }) => `${item.name}: only ${row!.stock} left`)
+            .join(" · "),
+        });
+      }
+
       const orderNumber = `JD-${Date.now().toString(36).toUpperCase()}`;
       const { data: order, error } = await supabase
         .from("orders")
@@ -168,7 +186,10 @@ function Checkout() {
           quantity: i.quantity,
         })),
       );
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        await supabase.from("orders").delete().eq("id", order.id);
+        throw itemsError;
+      }
 
       // Fire the order confirmation email/SMS (never block checkout on it).
       notifyOrder({ data: { orderId: order.id } }).catch(() => undefined);

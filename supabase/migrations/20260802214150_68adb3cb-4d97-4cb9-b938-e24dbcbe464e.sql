@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.reserve_product_stock() FROM anon, authenticated, public;

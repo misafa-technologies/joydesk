@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, Plus, Pencil, Trash2, Minus } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 
 export const Route = createFileRoute("/admin/products")({
   head: () => ({
@@ -348,8 +349,14 @@ function AdminProducts() {
                     </Select>
                   </div>
                   <div className="sm:col-span-2">
-                    <Label>Images (one URL per line or comma-separated)</Label>
-                    <Textarea rows={3} value={form.images} onChange={(e) => setForm((f) => ({ ...f, images: e.target.value }))} />
+                    <ImageUploader
+                      label="Images"
+                      multiple
+                      folder="products"
+                      value={form.images ? form.images.split(/[\n,]/).map((s) => s.trim()).filter(Boolean) : []}
+                      onChange={(urls) => setForm((f) => ({ ...f, images: urls.join("\n") }))}
+                      hint="Upload one or more product photos, or paste image URLs."
+                    />
                   </div>
                   <div className="sm:col-span-2">
                     <Label>Features (one per line)</Label>
@@ -389,6 +396,7 @@ function AdminProducts() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Price</TableHead>
@@ -400,6 +408,13 @@ function AdminProducts() {
                   <TableBody>
                     {filtered.map((p) => (
                       <TableRow key={p.id}>
+                        <TableCell>
+                          {p.images?.[0] ? (
+                            <img src={p.images[0]} alt={p.name} className="h-10 w-10 rounded-md border border-border object-cover" />
+                          ) : (
+                            <div className="h-10 w-10 rounded-md border border-dashed border-border bg-muted" />
+                          )}
+                        </TableCell>
                         <TableCell className="max-w-56 truncate font-medium">{p.name}</TableCell>
                         <TableCell>{categoryName(p.category_id)}</TableCell>
                         <TableCell>{formatKES(p.price)}</TableCell>
@@ -467,6 +482,8 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
   const queryClient = useQueryClient();
   const [newCategory, setNewCategory] = useState("");
   const [newBrand, setNewBrand] = useState("");
+  const [editingCategoryImage, setEditingCategoryImage] = useState<string | null>(null);
+  const [editingBrandLogo, setEditingBrandLogo] = useState<string | null>(null);
 
   const createCategory = useMutation({
     mutationFn: async (name: string) => {
@@ -488,6 +505,18 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
     },
     onSuccess: () => {
       toast.success("Category updated");
+      queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const updateCategoryImage = useMutation({
+    mutationFn: async ({ id, image_url }: { id: string; image_url: string | null }) => {
+      const { error } = await supabase.from("categories").update({ image_url }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Category image updated");
       queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
     },
     onError: (err: Error) => toast.error(err.message),
@@ -530,6 +559,18 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const updateBrandLogo = useMutation({
+    mutationFn: async ({ id, logo_url }: { id: string; logo_url: string | null }) => {
+      const { error } = await supabase.from("brands").update({ logo_url }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Brand logo updated");
+      queryClient.invalidateQueries({ queryKey: ["admin", "brands"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const deleteBrand = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("brands").delete().eq("id", id);
@@ -555,14 +596,36 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
           </div>
           <ul className="space-y-2">
             {categories.map((c) => (
-              <li key={c.id} className="flex items-center gap-2">
-                <Input
-                  defaultValue={c.name}
-                  onBlur={(e) => e.target.value.trim() && e.target.value !== c.name && renameCategory.mutate({ id: c.id, name: e.target.value.trim() })}
-                />
-                <Button size="icon" variant="ghost" onClick={() => deleteCategory.mutate(c.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+              <li key={c.id} className="space-y-2 rounded-md border border-border p-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingCategoryImage((cur) => (cur === c.id ? null : c.id))}
+                    className="shrink-0"
+                    aria-label="Edit category image"
+                  >
+                    {c.image_url ? (
+                      <img src={c.image_url} alt={c.name} className="h-9 w-9 rounded-md border border-border object-cover" />
+                    ) : (
+                      <div className="grid h-9 w-9 place-items-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">img</div>
+                    )}
+                  </button>
+                  <Input
+                    defaultValue={c.name}
+                    onBlur={(e) => e.target.value.trim() && e.target.value !== c.name && renameCategory.mutate({ id: c.id, name: e.target.value.trim() })}
+                  />
+                  <Button size="icon" variant="ghost" onClick={() => deleteCategory.mutate(c.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+                {editingCategoryImage === c.id && (
+                  <ImageUploader
+                    label="Category image"
+                    folder="categories"
+                    value={c.image_url ? [c.image_url] : []}
+                    onChange={(urls) => updateCategoryImage.mutate({ id: c.id, image_url: urls[0] ?? null })}
+                  />
+                )}
               </li>
             ))}
             {!categories.length && <p className="text-sm text-muted-foreground">No categories yet.</p>}
@@ -581,14 +644,36 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
           </div>
           <ul className="space-y-2">
             {brands.map((b) => (
-              <li key={b.id} className="flex items-center gap-2">
-                <Input
-                  defaultValue={b.name}
-                  onBlur={(e) => e.target.value.trim() && e.target.value !== b.name && renameBrand.mutate({ id: b.id, name: e.target.value.trim() })}
-                />
-                <Button size="icon" variant="ghost" onClick={() => deleteBrand.mutate(b.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+              <li key={b.id} className="space-y-2 rounded-md border border-border p-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingBrandLogo((cur) => (cur === b.id ? null : b.id))}
+                    className="shrink-0"
+                    aria-label="Edit brand logo"
+                  >
+                    {b.logo_url ? (
+                      <img src={b.logo_url} alt={b.name} className="h-9 w-9 rounded-md border border-border object-cover" />
+                    ) : (
+                      <div className="grid h-9 w-9 place-items-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">logo</div>
+                    )}
+                  </button>
+                  <Input
+                    defaultValue={b.name}
+                    onBlur={(e) => e.target.value.trim() && e.target.value !== b.name && renameBrand.mutate({ id: b.id, name: e.target.value.trim() })}
+                  />
+                  <Button size="icon" variant="ghost" onClick={() => deleteBrand.mutate(b.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+                {editingBrandLogo === b.id && (
+                  <ImageUploader
+                    label="Brand logo"
+                    folder="brands"
+                    value={b.logo_url ? [b.logo_url] : []}
+                    onChange={(urls) => updateBrandLogo.mutate({ id: b.id, logo_url: urls[0] ?? null })}
+                  />
+                )}
               </li>
             ))}
             {!brands.length && <p className="text-sm text-muted-foreground">No brands yet.</p>}
