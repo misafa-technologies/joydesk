@@ -2,13 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { CheckCircle2, Download, MessageCircle, Truck, Loader2, XCircle, RefreshCw } from "lucide-react";
+import { CheckCircle2, Download, MessageCircle, Truck, Loader2, XCircle, RefreshCw, Printer, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { formatKES, formatDateTime } from "@/lib/format";
 import { checkMpesaPayment, startMpesaPayment } from "@/lib/mpesa.functions";
+import { downloadReceipt as downloadReceiptFile, printReceipt } from "@/lib/receipt";
+import { paymentLink, trackingLink } from "@/lib/site";
 
 export const Route = createFileRoute("/order-success/$orderNumber")({
   head: ({ params }) => ({
@@ -45,8 +47,17 @@ function OrderSuccess() {
         .maybeSingle();
       if (error) throw error;
       if (!order) return null;
-      const { data: items } = await supabase.from("order_items").select("*").eq("order_id", order.id);
-      return { order, items: items ?? [] };
+      const [{ data: items }, { data: payment }] = await Promise.all([
+        supabase.from("order_items").select("*").eq("order_id", order.id),
+        supabase
+          .from("payments")
+          .select("mpesa_receipt, status")
+          .eq("order_id", order.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      return { order, items: items ?? [], payment };
     },
   });
 
@@ -72,7 +83,7 @@ function OrderSuccess() {
     );
   }
 
-  const { order, items } = data;
+  const { order, items, payment } = data;
   const paybill = settings?.mpesa_paybill ?? "400200";
   const accountName = settings?.mpesa_account_name ?? "JoyDesk";
   const whatsapp = (settings?.whatsapp_number ?? "254700000000").replace(/\D/g, "");
@@ -85,10 +96,13 @@ function OrderSuccess() {
       "",
       `Total: ${formatKES(order.total)}`,
       `Payment: M-Pesa Paybill ${paybill} (Acc: ${order.order_number})`,
+      order.payment_status !== "paid" ? `Pay online: ${paymentLink(order.order_number)}` : "",
       order.county ? `Deliver to: ${order.street}, ${order.town}, ${order.sub_county}, ${order.county}` : "Store pickup",
       "",
       "Here is my payment confirmation / follow-up.",
-    ].join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n"),
   );
 
   const mpesaJson = JSON.stringify(
@@ -100,6 +114,8 @@ function OrderSuccess() {
       currency: "KES",
       reference: order.order_number,
       whatsapp_followup: `https://wa.me/${whatsapp}`,
+      payment_link: paymentLink(order.order_number),
+      track_link: trackingLink(order.order_number),
     },
     null,
     2,
