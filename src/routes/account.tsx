@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Heart, Loader2, MapPin, Package, Pencil, Plus, Save, Trash2, UserRound } from "lucide-react";
+import { CreditCard, Heart, Loader2, MapPin, Package, Pencil, Plus, Printer, Save, Trash2, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { COUNTY_NAMES, getSubCounties, getTowns } from "@/data/kenya-locations";
 import { formatDateTime, formatKES, normalizeKenyanPhone } from "@/lib/format";
+import { printReceipt } from "@/lib/receipt";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -45,6 +46,7 @@ function AccountPage() {
   const [profile, setProfile] = useState({ full_name: "", phone: "", email: "", marketing_opt_in: false });
   const [address, setAddress] = useState<AddressForm | null>(null);
   const [saving, setSaving] = useState(false);
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/account" }, replace: true });
@@ -139,6 +141,39 @@ function AccountPage() {
     toast.success("Address removed");
   }
 
+  async function handlePrintReceipt(order: { id: string; order_number: string; created_at: string; total: number; payment_status: string }) {
+    setPrintingId(order.id);
+    try {
+      const [{ data: fullOrder, error: orderError }, { data: items, error: itemsError }, { data: settings }, { data: payment }] = await Promise.all([
+        supabase.from("orders").select("*").eq("id", order.id).maybeSingle(),
+        supabase.from("order_items").select("*").eq("order_id", order.id),
+        supabase.from("store_settings").select("*").limit(1).maybeSingle(),
+        supabase
+          .from("payments")
+          .select("mpesa_receipt")
+          .eq("order_id", order.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (orderError) throw orderError;
+      if (itemsError) throw itemsError;
+      if (!fullOrder) throw new Error("Order not found");
+      printReceipt(fullOrder, items ?? [], {
+        storeName: settings?.store_name,
+        tagline: settings?.tagline,
+        supportPhone: settings?.support_phone,
+        supportEmail: settings?.support_email,
+        paybill: settings?.mpesa_paybill ?? "400200",
+        receipt: payment?.mpesa_receipt,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not load receipt");
+    } finally {
+      setPrintingId(null);
+    }
+  }
+
   if (loading || !user || isLoading) return <Shell><div className="grid min-h-[50vh] place-items-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div></Shell>;
 
   const tabs = [
@@ -181,7 +216,7 @@ function AccountPage() {
             <div className="mt-6 grid gap-4 sm:grid-cols-2">{data?.addresses.map((item) => <article key={item.id} className="rounded-md border border-border p-5"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><h3 className="font-semibold">{item.label || "Address"}</h3>{item.is_default && <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">Default</span>}</div><p className="mt-2 text-sm">{item.recipient_name} · {item.phone}</p><p className="mt-1 text-sm text-muted-foreground">{[item.street, item.town, item.sub_county, item.county].filter(Boolean).join(", ")}</p></div><div className="flex"><Button type="button" size="icon" variant="ghost" aria-label="Edit address" onClick={() => setAddress({ id: item.id, label: item.label ?? "Address", recipient_name: item.recipient_name, phone: item.phone, county: item.county, sub_county: item.sub_county ?? "", town: item.town ?? "", street: item.street ?? "", notes: item.notes ?? "", is_default: item.is_default })}><Pencil className="h-4 w-4" /></Button><Button type="button" size="icon" variant="ghost" aria-label="Delete address" onClick={() => removeAddress(item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div>{!item.is_default && <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => setDefault(item.id)}>Make default</Button>}</article>)}{!data?.addresses.length && !address && <p className="text-sm text-muted-foreground">No saved addresses yet.</p>}</div>
           </section>}
 
-          {tab === "orders" && <section><h2 className="text-xl font-semibold">Order history</h2><p className="mt-1 text-sm text-muted-foreground">Payment, fulfilment, receipts and delivery progress.</p><div className="mt-6 divide-y divide-border rounded-md border border-border">{data?.orders.map((order) => <article key={order.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><strong>{order.order_number}</strong><span className="rounded-full bg-muted px-2 py-0.5 text-xs capitalize">{order.status}</span><span className="rounded-full bg-muted px-2 py-0.5 text-xs capitalize">Payment {order.payment_status}</span></div><p className="mt-1 text-sm text-muted-foreground">{formatDateTime(order.created_at)}</p></div><strong>{formatKES(order.total)}</strong><div className="flex gap-2"><Button asChild variant="outline" size="sm"><Link to="/order-success/$orderNumber" params={{ orderNumber: order.order_number }}>Receipt</Link></Button><Button asChild size="sm"><Link to="/track" search={{ order: order.order_number }}>Track</Link></Button></div></article>)}{!data?.orders.length && <p className="p-6 text-sm text-muted-foreground">You have not placed an order yet.</p>}</div></section>}
+          {tab === "orders" && <section><h2 className="text-xl font-semibold">Order history</h2><p className="mt-1 text-sm text-muted-foreground">Payment, fulfilment, receipts and delivery progress.</p><div className="mt-6 divide-y divide-border rounded-md border border-border">{data?.orders.map((order) => <article key={order.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><strong>{order.order_number}</strong><span className="rounded-full bg-muted px-2 py-0.5 text-xs capitalize">{order.status}</span><span className="rounded-full bg-muted px-2 py-0.5 text-xs capitalize">Payment {order.payment_status}</span></div><p className="mt-1 text-sm text-muted-foreground">{formatDateTime(order.created_at)}</p></div><strong>{formatKES(order.total)}</strong><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" disabled={printingId === order.id} onClick={() => handlePrintReceipt(order)}>{printingId === order.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}Receipt</Button>{order.payment_status !== "paid" && <Button asChild size="sm"><Link to="/pay/$orderNumber" params={{ orderNumber: order.order_number }}><CreditCard className="h-4 w-4" />Complete payment</Link></Button>}<Button asChild variant="outline" size="sm"><Link to="/track" search={{ order: order.order_number }}>Track</Link></Button></div></article>)}{!data?.orders.length && <p className="p-6 text-sm text-muted-foreground">You have not placed an order yet.</p>}</div></section>}
           {tab === "wishlist" && <section><h2 className="text-xl font-semibold">Wishlist</h2><p className="mt-1 text-sm text-muted-foreground">You have {data?.wishlistCount ?? 0} saved item{data?.wishlistCount === 1 ? "" : "s"}.</p><Button asChild className="mt-6"><Link to="/wishlist"><Heart className="h-4 w-4" />Open wishlist</Link></Button></section>}
         </div>
       </div>
