@@ -62,6 +62,39 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_settings: {
+        Row: {
+          apple_enabled: boolean
+          created_at: string
+          email_enabled: boolean
+          google_enabled: boolean
+          id: string
+          signup_enabled: boolean
+          social_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          apple_enabled?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          google_enabled?: boolean
+          id?: string
+          signup_enabled?: boolean
+          social_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          apple_enabled?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          google_enabled?: boolean
+          id?: string
+          signup_enabled?: boolean
+          social_note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           created_at: string
@@ -193,6 +226,45 @@ export type Database = {
           min_order_total?: number
           updated_at?: string
           used_count?: number
+        }
+        Relationships: []
+      }
+      couriers: {
+        Row: {
+          counties: string[]
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          tracking_url_template: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          counties?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          tracking_url_template?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          counties?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          tracking_url_template?: string | null
+          updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
@@ -512,6 +584,9 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string | null
+          verification_note: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           amount?: number
@@ -529,6 +604,9 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string | null
+          verification_note?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           amount?: number
@@ -546,6 +624,9 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string | null
+          verification_note?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -730,6 +811,7 @@ export type Database = {
       shipments: {
         Row: {
           courier: string | null
+          courier_id: string | null
           created_at: string
           current_location: string | null
           estimated_delivery: string | null
@@ -742,6 +824,7 @@ export type Database = {
         }
         Insert: {
           courier?: string | null
+          courier_id?: string | null
           created_at?: string
           current_location?: string | null
           estimated_delivery?: string | null
@@ -754,6 +837,7 @@ export type Database = {
         }
         Update: {
           courier?: string | null
+          courier_id?: string | null
           created_at?: string
           current_location?: string | null
           estimated_delivery?: string | null
@@ -765,6 +849,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "shipments_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "shipments_order_id_fkey"
             columns: ["order_id"]
@@ -778,8 +869,12 @@ export type Database = {
         Row: {
           created_at: string
           express_delivery_fee: number
+          facebook_url: string | null
           free_delivery_threshold: number
           id: string
+          instagram_url: string | null
+          linkedin_url: string | null
+          logo_url: string | null
           mpesa_account_name: string | null
           mpesa_paybill: string | null
           standard_delivery_fee: number
@@ -787,14 +882,21 @@ export type Database = {
           support_email: string | null
           support_phone: string | null
           tagline: string
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string
           whatsapp_number: string | null
+          youtube_url: string | null
         }
         Insert: {
           created_at?: string
           express_delivery_fee?: number
+          facebook_url?: string | null
           free_delivery_threshold?: number
           id?: string
+          instagram_url?: string | null
+          linkedin_url?: string | null
+          logo_url?: string | null
           mpesa_account_name?: string | null
           mpesa_paybill?: string | null
           standard_delivery_fee?: number
@@ -802,14 +904,21 @@ export type Database = {
           support_email?: string | null
           support_phone?: string | null
           tagline?: string
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           whatsapp_number?: string | null
+          youtube_url?: string | null
         }
         Update: {
           created_at?: string
           express_delivery_fee?: number
+          facebook_url?: string | null
           free_delivery_threshold?: number
           id?: string
+          instagram_url?: string | null
+          linkedin_url?: string | null
+          logo_url?: string | null
           mpesa_account_name?: string | null
           mpesa_paybill?: string | null
           standard_delivery_fee?: number
@@ -817,8 +926,11 @@ export type Database = {
           support_email?: string | null
           support_phone?: string | null
           tagline?: string
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           whatsapp_number?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }

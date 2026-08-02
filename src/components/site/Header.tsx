@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, ShoppingCart, Heart, User, Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/hooks/use-cart";
 import { useRoles } from "@/hooks/use-role";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,14 @@ export function Header() {
   const { user, isStaff } = useRoles();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { data: storeSettings } = useQuery({
+    queryKey: ["store-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("store_settings").select("*").limit(1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -37,8 +46,16 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold text-sm">J</div>
-          <span className="text-lg font-semibold tracking-tight">JoyDesk</span>
+          {storeSettings?.logo_url ? (
+            <img src={storeSettings.logo_url} alt={storeSettings.store_name} className="h-8 w-auto max-w-[8rem] object-contain" />
+          ) : (
+            <>
+              <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold text-sm">
+                {(storeSettings?.store_name ?? "JoyDesk").charAt(0)}
+              </div>
+              <span className="text-lg font-semibold tracking-tight">{storeSettings?.store_name ?? "JoyDesk"}</span>
+            </>
+          )}
         </Link>
 
         <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-muted-foreground">
