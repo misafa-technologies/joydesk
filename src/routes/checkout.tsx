@@ -186,7 +186,10 @@ function Checkout() {
           quantity: i.quantity,
         })),
       );
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        await supabase.from("orders").delete().eq("id", order.id);
+        throw itemsError;
+      }
 
       // Fire the order confirmation email/SMS (never block checkout on it).
       notifyOrder({ data: { orderId: order.id } }).catch(() => undefined);
