@@ -126,3 +126,114 @@ function AdminPayments() {
     </div>
   );
 }
+
+/** Validate a Paybill payment made outside STK push, by business + account number. */
+function ManualVerifyCard() {
+  const qc = useQueryClient();
+  const verify = useServerFn(verifyManualPayment);
+  const [form, setForm] = useState({ businessNumber: "", accountNumber: "", mpesaCode: "", amount: "" });
+  const [busy, setBusy] = useState(false);
+
+  const { data: config } = useQuery({
+    queryKey: ["admin", "mpesa-config-shortcode"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("mpesa_config")
+        .select("short_code, party_b")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const shortCode = config?.short_code ?? "";
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const res = (await verify({
+        data: {
+          businessNumber: form.businessNumber || shortCode,
+          accountNumber: form.accountNumber,
+          mpesaCode: form.mpesaCode || undefined,
+          amount: form.amount ? Number(form.amount) : undefined,
+        },
+      })) as { status: string; message: string };
+      if (res.status === "unconfirmed") toast.warning(res.message);
+      else toast.success(res.message);
+      qc.invalidateQueries({ queryKey: ["admin", "payments"] });
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+      if (res.status !== "unconfirmed") setForm({ businessNumber: "", accountNumber: "", mpesaCode: "", amount: "" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <ShieldCheck className="h-4 w-4 text-primary" /> Mark paid manually
+        </CardTitle>
+        <CardDescription>
+          For customers who paid straight to the Paybill. We match the business number and account number, confirm with
+          M-Pesa where possible, then mark the order paid and notify the customer.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Label htmlFor="mv-business">Business number</Label>
+            <Input
+              id="mv-business"
+              value={form.businessNumber}
+              placeholder={shortCode || "Paybill / Till"}
+              maxLength={12}
+              onChange={(e) => setForm((f) => ({ ...f, businessNumber: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="mv-account">Account number (order no.)</Label>
+            <Input
+              id="mv-account"
+              required
+              value={form.accountNumber}
+              placeholder="JD-XXXXXX"
+              maxLength={40}
+              onChange={(e) => setForm((f) => ({ ...f, accountNumber: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="mv-code">M-Pesa code (optional)</Label>
+            <Input
+              id="mv-code"
+              value={form.mpesaCode}
+              placeholder="SLK4H2XYZ1"
+              maxLength={20}
+              onChange={(e) => setForm((f) => ({ ...f, mpesaCode: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="mv-amount">Amount paid (optional)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="mv-amount"
+                type="number"
+                min={0}
+                value={form.amount}
+                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+              />
+              <Button type="submit" disabled={busy}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
