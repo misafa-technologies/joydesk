@@ -29,6 +29,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as PayOrderNumberRouteImport } from './routes/pay.$orderNumber'
 import { Route as OrderSuccessOrderNumberRouteImport } from './routes/order-success.$orderNumber'
 import { Route as AdminShippingRouteImport } from './routes/admin.shipping'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -143,6 +144,11 @@ const ProductSlugRoute = ProductSlugRouteImport.update({
   path: '/product/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PayOrderNumberRoute = PayOrderNumberRouteImport.update({
+  id: '/pay/$orderNumber',
+  path: '/pay/$orderNumber',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrderSuccessOrderNumberRoute = OrderSuccessOrderNumberRouteImport.update({
   id: '/order-success/$orderNumber',
   path: '/order-success/$orderNumber',
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/order-success/$orderNumber': typeof OrderSuccessOrderNumberRoute
+  '/pay/$orderNumber': typeof PayOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/mpesa/callback': typeof ApiPublicMpesaCallbackRoute
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/order-success/$orderNumber': typeof OrderSuccessOrderNumberRoute
+  '/pay/$orderNumber': typeof PayOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/mpesa/callback': typeof ApiPublicMpesaCallbackRoute
@@ -310,6 +318,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/order-success/$orderNumber': typeof OrderSuccessOrderNumberRoute
+  '/pay/$orderNumber': typeof PayOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/mpesa/callback': typeof ApiPublicMpesaCallbackRoute
@@ -347,6 +356,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/shipping'
     | '/order-success/$orderNumber'
+    | '/pay/$orderNumber'
     | '/product/$slug'
     | '/admin/'
     | '/api/public/mpesa/callback'
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/shipping'
     | '/order-success/$orderNumber'
+    | '/pay/$orderNumber'
     | '/product/$slug'
     | '/admin'
     | '/api/public/mpesa/callback'
@@ -416,6 +427,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/shipping'
     | '/order-success/$orderNumber'
+    | '/pay/$orderNumber'
     | '/product/$slug'
     | '/admin/'
     | '/api/public/mpesa/callback'
@@ -441,6 +453,7 @@ export interface RootRouteChildren {
   TrackRoute: typeof TrackRoute
   WishlistRoute: typeof WishlistRoute
   OrderSuccessOrderNumberRoute: typeof OrderSuccessOrderNumberRoute
+  PayOrderNumberRoute: typeof PayOrderNumberRoute
   ProductSlugRoute: typeof ProductSlugRoute
   ApiPublicMpesaCallbackRoute: typeof ApiPublicMpesaCallbackRoute
 }
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       path: '/product/$slug'
       fullPath: '/product/$slug'
       preLoaderRoute: typeof ProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$orderNumber': {
+      id: '/pay/$orderNumber'
+      path: '/pay/$orderNumber'
+      fullPath: '/pay/$orderNumber'
+      preLoaderRoute: typeof PayOrderNumberRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/order-success/$orderNumber': {
@@ -733,9 +753,20 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRoute: TrackRoute,
   WishlistRoute: WishlistRoute,
   OrderSuccessOrderNumberRoute: OrderSuccessOrderNumberRoute,
+  PayOrderNumberRoute: PayOrderNumberRoute,
   ProductSlugRoute: ProductSlugRoute,
   ApiPublicMpesaCallbackRoute: ApiPublicMpesaCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
