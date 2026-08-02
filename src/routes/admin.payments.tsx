@@ -56,6 +56,9 @@ function AdminPayments() {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Payments</h2>
+
+      <ManualVerifyCard />
+
       <Select value={status} onValueChange={setStatus}>
         <SelectTrigger className="sm:w-48"><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
@@ -63,6 +66,7 @@ function AdminPayments() {
           {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
         </SelectContent>
       </Select>
+
 
       <Card>
         <CardContent className="overflow-x-auto p-0">
