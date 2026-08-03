@@ -206,8 +206,32 @@ function AdminOrders() {
                 <Badge variant="secondary">{selected.status}</Badge>
                 <Badge variant="outline">{selected.payment_status}</Badge>
               </div>
+
+              <div className="space-y-2 rounded-md border border-border p-3">
+                <h4 className="font-medium text-foreground">Fulfilment courier</h4>
+                <p className="text-xs text-muted-foreground">
+                  Pair this order with the courier who will deliver it — customers see this on the tracking page.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Select
+                    value={shipment?.courier_id ?? ""}
+                    onValueChange={(courierId) => pairCourier.mutate({ order: selected, courierId })}
+                    disabled={pairCourier.isPending}
+                  >
+                    <SelectTrigger className="sm:w-64"><SelectValue placeholder="Select a courier" /></SelectTrigger>
+                    <SelectContent>
+                      {(couriers ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {pairCourier.isPending && <Loader2 className="h-4 w-4 animate-spin self-center text-muted-foreground" />}
+                </div>
+                {shipment?.tracking_number && (
+                  <p className="text-xs text-muted-foreground">Tracking number: <span className="font-medium text-foreground">{shipment.tracking_number}</span></p>
+                )}
+              </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
     </div>
