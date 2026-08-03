@@ -6,6 +6,8 @@ import { Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ImageUploader } from "@/components/admin/ImageUploader";
+
 
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({ meta: [
