@@ -69,6 +69,55 @@ function AdminOrders() {
     });
   }, [orders, status, paymentStatus, search]);
 
+  const { data: couriers } = useQuery({
+    queryKey: ["admin", "couriers", "active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("couriers").select("id, name").eq("is_active", true).order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: shipment } = useQuery({
+    queryKey: ["admin", "shipment", selected?.id],
+    enabled: !!selected,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("shipments").select("*").eq("order_id", selected!.id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const pairCourier = useMutation({
+    mutationFn: async ({ order, courierId }: { order: Order; courierId: string }) => {
+      const courier = couriers?.find((c) => c.id === courierId);
+      if (shipment) {
+        const { error } = await supabase
+          .from("shipments")
+          .update({ courier_id: courierId, courier: courier?.name ?? null })
+          .eq("id", shipment.id);
+        if (error) throw error;
+        return;
+      }
+      const { error } = await supabase.from("shipments").insert({
+        order_id: order.id,
+        tracking_number: `JDTRK-${Date.now().toString(36).toUpperCase()}`,
+        courier_id: courierId,
+        courier: courier?.name ?? null,
+        status: order.status === "pending" ? "processing" : order.status,
+        current_location: "JoyDesk warehouse",
+        history: [{ status: "processing", location: "JoyDesk warehouse", courier: courier?.name ?? null, at: new Date().toISOString() }],
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Courier paired with this order");
+      queryClient.invalidateQueries({ queryKey: ["admin", "shipment"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "shipping"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Order> }) => {
       const { error } = await supabase.from("orders").update(patch).eq("id", id);
@@ -80,6 +129,7 @@ function AdminOrders() {
     },
     onError: (err: Error) => toast.error(err.message),
   });
+
 
   return (
     <div className="space-y-6">
@@ -206,8 +256,32 @@ function AdminOrders() {
                 <Badge variant="secondary">{selected.status}</Badge>
                 <Badge variant="outline">{selected.payment_status}</Badge>
               </div>
+
+              <div className="space-y-2 rounded-md border border-border p-3">
+                <h4 className="font-medium text-foreground">Fulfilment courier</h4>
+                <p className="text-xs text-muted-foreground">
+                  Pair this order with the courier who will deliver it — customers see this on the tracking page.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Select
+                    value={shipment?.courier_id ?? ""}
+                    onValueChange={(courierId) => pairCourier.mutate({ order: selected, courierId })}
+                    disabled={pairCourier.isPending}
+                  >
+                    <SelectTrigger className="sm:w-64"><SelectValue placeholder="Select a courier" /></SelectTrigger>
+                    <SelectContent>
+                      {(couriers ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {pairCourier.isPending && <Loader2 className="h-4 w-4 animate-spin self-center text-muted-foreground" />}
+                </div>
+                {shipment?.tracking_number && (
+                  <p className="text-xs text-muted-foreground">Tracking number: <span className="font-medium text-foreground">{shipment.tracking_number}</span></p>
+                )}
+              </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
     </div>

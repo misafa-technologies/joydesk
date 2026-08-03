@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { COUNTY_NAMES, getSubCounties, getTowns } from "@/data/kenya-locations";
 import { formatDateTime, formatKES, normalizeKenyanPhone } from "@/lib/format";
-import { printReceipt } from "@/lib/receipt";
+import { previewReceipt } from "@/lib/receipt";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -159,7 +159,7 @@ function AccountPage() {
       if (orderError) throw orderError;
       if (itemsError) throw itemsError;
       if (!fullOrder) throw new Error("Order not found");
-      printReceipt(fullOrder, items ?? [], {
+      previewReceipt(fullOrder, items ?? [], {
         storeName: settings?.store_name,
         tagline: settings?.tagline,
         supportPhone: settings?.support_phone,

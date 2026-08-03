@@ -14,6 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/use-auth";
 import { CartProvider } from "@/hooks/use-cart";
 import { Toaster } from "@/components/ui/sonner";
+import { FloatingChat } from "@/components/site/FloatingChat";
+
 
 function NotFoundComponent() {
   return (
@@ -129,7 +131,9 @@ function RootComponent() {
         <CartProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
+          <FloatingChat />
           <Toaster position="top-center" richColors />
+
         </CartProvider>
       </AuthProvider>
     </QueryClientProvider>

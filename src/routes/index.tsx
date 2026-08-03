@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Truck, ShieldCheck, Lock, Award, Building2, MapPin, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import catChairs from "@/assets/cat-chairs.jpg";
@@ -20,14 +22,49 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const CATEGORIES = [
-  { name: "Office Chairs", slug: "chairs", img: catChairs, count: "120+ products" },
-  { name: "Standing Desks", slug: "desks", img: catDesks, count: "80+ products" },
-  { name: "Business Laptops", slug: "laptops", img: catLaptops, count: "60+ products" },
-  { name: "Monitors", slug: "monitors", img: catMonitors, count: "45+ products" },
-  { name: "Executive Chairs", slug: "chairs", img: catChairs, count: "40+ products" },
-  { name: "Accessories", slug: "accessories", img: catMonitors, count: "200+ products" },
+const FALLBACK_IMAGES: Record<string, string> = {
+  chairs: catChairs,
+  desks: catDesks,
+  laptops: catLaptops,
+  monitors: catMonitors,
+};
+
+type HomeCategory = { name: string; slug: string; img: string; count: string };
+
+const FALLBACK_CATEGORIES: HomeCategory[] = [
+  { name: "Office Chairs", slug: "chairs", img: catChairs, count: "Shop now" },
+  { name: "Standing Desks", slug: "desks", img: catDesks, count: "Shop now" },
+  { name: "Business Laptops", slug: "laptops", img: catLaptops, count: "Shop now" },
+  { name: "Monitors", slug: "monitors", img: catMonitors, count: "Shop now" },
 ];
+
+/** Live categories, images and counts straight from the admin catalogue. */
+function useHomeCategories(): HomeCategory[] {
+  const { data } = useQuery({
+    queryKey: ["home-categories"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const [cats, products] = await Promise.all([
+        supabase.from("categories").select("id, name, slug, image_url").order("name"),
+        supabase.from("products").select("category_id").eq("is_active", true),
+      ]);
+      if (cats.error) throw cats.error;
+      if (products.error) throw products.error;
+      const counts = new Map<string, number>();
+      for (const row of products.data ?? []) {
+        if (row.category_id) counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
+      }
+      return (cats.data ?? []).map((c) => ({
+        name: c.name,
+        slug: c.slug,
+        img: c.image_url || FALLBACK_IMAGES[c.slug] || catDesks,
+        count: `${counts.get(c.id) ?? 0} product${(counts.get(c.id) ?? 0) === 1 ? "" : "s"}`,
+      }));
+    },
+  });
+  return data?.length ? data : FALLBACK_CATEGORIES;
+}
+
 
 const FEATURES = [
   { icon: Truck, title: "Free Delivery", desc: "Nationwide on orders over KSh 15,000" },
@@ -54,7 +91,9 @@ const TESTIMONIALS = [
 ];
 
 function Home() {
+  const CATEGORIES = useHomeCategories();
   return (
+
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
 

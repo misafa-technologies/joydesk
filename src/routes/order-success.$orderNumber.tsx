@@ -9,7 +9,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { formatKES, formatDateTime } from "@/lib/format";
 import { checkMpesaPayment, startMpesaPayment } from "@/lib/mpesa.functions";
-import { downloadReceipt as downloadReceiptFile, printReceipt } from "@/lib/receipt";
+import { downloadReceipt as downloadReceiptFile, previewReceipt } from "@/lib/receipt";
 import { paymentLink, trackingLink } from "@/lib/site";
 
 export const Route = createFileRoute("/order-success/$orderNumber")({
@@ -213,10 +213,10 @@ function OrderSuccess() {
           {isPaid ? (
             <>
               <button
-                onClick={() => printReceipt(order, items, receiptBrand)}
+                onClick={() => previewReceipt(order, items, receiptBrand)}
                 className="flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted"
               >
-                <Printer className="h-4 w-4" /> Print receipt
+                <Printer className="h-4 w-4" /> Preview & print receipt
               </button>
               <button
                 onClick={() => downloadReceiptFile(order, items, receiptBrand)}
