@@ -147,6 +147,22 @@ export function buildReceiptHtml(order: ReceiptOrder, items: ReceiptItem[], bran
 
 }
 
+/**
+ * Opens a print preview of the receipt in a new tab. The reader can review the
+ * A5 layout first, then print or download from the toolbar.
+ */
+export function previewReceipt(order: ReceiptOrder, items: ReceiptItem[], brand: ReceiptBranding = {}) {
+  const html = buildReceiptHtml(order, items, brand);
+  const win = window.open("", "_blank", "width=820,height=980");
+  if (!win) {
+    downloadReceipt(order, items, brand);
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+}
+
 /** Opens the receipt in a new tab and triggers the browser print dialog. */
 export function printReceipt(order: ReceiptOrder, items: ReceiptItem[], brand: ReceiptBranding = {}) {
   const html = buildReceiptHtml(order, items, brand);
@@ -160,6 +176,7 @@ export function printReceipt(order: ReceiptOrder, items: ReceiptItem[], brand: R
   win.focus();
   setTimeout(() => win.print(), 350);
 }
+
 
 /** Saves the receipt as a self-contained HTML file. */
 export function downloadReceipt(order: ReceiptOrder, items: ReceiptItem[], brand: ReceiptBranding = {}) {
