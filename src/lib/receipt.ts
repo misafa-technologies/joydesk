@@ -75,8 +75,19 @@ export function buildReceiptHtml(order: ReceiptOrder, items: ReceiptItem[], bran
   .pay a { color:#0F4C81; }
   footer { margin-top:12px; border-top:1px solid #e5e7eb; padding-top:6px; color:#6b7280; font-size:9px; display:flex; justify-content:space-between; gap:10px; }
   @media print { .noprint { display:none !important; } body { font-size:10.5px; } }
-  .noprint { text-align:center; margin:14px 0 0; }
-  .noprint button { font:inherit; font-weight:600; padding:7px 16px; border-radius:6px; border:1px solid #0F4C81; background:#0F4C81; color:#fff; cursor:pointer; }
+  .noprint { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:16px 0 24px; }
+  .noprint button { font:inherit; font-weight:600; padding:9px 16px; border-radius:6px; border:1px solid #0F4C81; background:#0F4C81; color:#fff; cursor:pointer; }
+  .noprint button.ghost { background:#fff; color:#0F4C81; }
+  /* Compact A5 sheet on large screens, fluid full-width receipt on phones. */
+  @media screen and (max-width: 640px) {
+    body { font-size:12px; padding:10px; }
+    .sheet { max-width:100%; }
+    header { flex-direction:column; gap:6px; }
+    .doc { text-align:left; }
+    .meta { flex-direction:column; gap:8px; }
+    .noprint button { flex:1 1 45%; }
+  }
+
 </style></head><body><div class="sheet">
 <header>
   <div><div class="brand">${esc(store)}</div><div class="tag">${esc(brand.tagline || "Comfort Meets Productivity")}</div></div>
