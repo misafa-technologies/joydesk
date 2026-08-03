@@ -125,8 +125,26 @@ export function buildReceiptHtml(order: ReceiptOrder, items: ReceiptItem[], bran
 </div>
 
 <footer><span>Thank you for shopping with ${esc(store)}.</span><span>${esc(brand.supportPhone || "")} ${esc(brand.supportEmail || "")}</span></footer>
-<div class="noprint"><button onclick="window.print()">Print receipt</button></div>
+<div class="noprint">
+  <button onclick="window.print()">Print receipt</button>
+  <button class="ghost" onclick="window.__download()">Download</button>
+  <button class="ghost" onclick="window.close()">Close</button>
+</div>
+<script>
+  (function () {
+    var snapshot = document.documentElement.outerHTML;
+    window.__download = function () {
+      var blob = new Blob(['<!doctype html>' + snapshot], { type: 'text/html' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = ${JSON.stringify(`Receipt-${order.order_number}.html`)};
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    };
+  })();
+</script>
 </div></body></html>`;
+
 }
 
 /** Opens the receipt in a new tab and triggers the browser print dialog. */
