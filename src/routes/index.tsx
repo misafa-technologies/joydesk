@@ -91,7 +91,9 @@ const TESTIMONIALS = [
 ];
 
 function Home() {
+  const CATEGORIES = useHomeCategories();
   return (
+
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
