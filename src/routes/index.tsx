@@ -4,6 +4,8 @@ import { ArrowRight, Truck, ShieldCheck, Lock, Award, Building2, MapPin, Star } 
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { CategoryCarousel3D } from "@/components/site/CategoryCarousel3D";
+
 import catChairs from "@/assets/cat-chairs.jpg";
 import catDesks from "@/assets/cat-desks.jpg";
 import catLaptops from "@/assets/cat-laptops.jpg";
