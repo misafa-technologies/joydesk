@@ -45,18 +45,23 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex shrink-0 items-center gap-2">
           {storeSettings?.logo_url ? (
-            <img src={storeSettings.logo_url} alt={storeSettings.store_name} className="h-8 w-auto max-w-[8rem] object-contain" />
+            <img
+              src={storeSettings.logo_url}
+              alt={storeSettings.store_name}
+              className="h-9 w-auto max-w-[8.5rem] object-contain sm:h-10 sm:max-w-[11rem] lg:h-11 lg:max-w-[13rem]"
+            />
           ) : (
             <>
-              <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold text-sm">
+              <div className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground font-bold text-sm sm:h-10 sm:w-10">
                 {(storeSettings?.store_name ?? "JoyDesk").charAt(0)}
               </div>
-              <span className="text-lg font-semibold tracking-tight">{storeSettings?.store_name ?? "JoyDesk"}</span>
+              <span className="text-lg font-semibold tracking-tight sm:text-xl">{storeSettings?.store_name ?? "JoyDesk"}</span>
             </>
           )}
         </Link>
+
 
         <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-muted-foreground">
           {NAV.map((n) => (
