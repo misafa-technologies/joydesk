@@ -85,7 +85,8 @@ const TESTIMONIALS = [
 ];
 
 function Home() {
-  const CATEGORIES = useHomeCategories();
+  const { categories: CATEGORIES, loading: categoriesLoading } = useHomeCategories();
+
   return (
 
     <div className="flex min-h-screen flex-col bg-background">
