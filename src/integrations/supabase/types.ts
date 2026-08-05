@@ -444,6 +444,41 @@ export type Database = {
           },
         ]
       }
+      order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          order_id: string
+          status: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id: string
+          status: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -811,6 +846,7 @@ export type Database = {
       shipments: {
         Row: {
           courier: string | null
+          courier_contact: string | null
           courier_id: string | null
           created_at: string
           current_location: string | null
@@ -824,6 +860,7 @@ export type Database = {
         }
         Insert: {
           courier?: string | null
+          courier_contact?: string | null
           courier_id?: string | null
           created_at?: string
           current_location?: string | null
@@ -837,6 +874,7 @@ export type Database = {
         }
         Update: {
           courier?: string | null
+          courier_contact?: string | null
           courier_id?: string | null
           created_at?: string
           current_location?: string | null
