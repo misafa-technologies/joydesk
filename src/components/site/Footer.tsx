@@ -3,12 +3,46 @@ import { useQuery } from "@tanstack/react-query";
 import { Facebook, Instagram, Twitter, Linkedin, Youtube, Music2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-const COLS = [
-  { title: "Shop", links: ["Office Chairs", "Standing Desks", "Business Laptops", "Monitors", "Accessories"] },
-  { title: "Company", links: ["About", "Blog", "Careers", "Press", "Contact"] },
-  { title: "Support", links: ["Track Order", "Returns", "Warranty", "FAQ", "Help Center"] },
-  { title: "Policies", links: ["Privacy", "Terms", "Shipping", "Refunds", "Cookies"] },
+const COLS: { title: string; links: { label: string; to: string }[] }[] = [
+  {
+    title: "Shop",
+    links: [
+      { label: "All products", to: "/shop" },
+      { label: "Categories", to: "/categories" },
+      { label: "Brands", to: "/brands" },
+      { label: "Deals", to: "/deals" },
+      { label: "Corporate quote", to: "/quote" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", to: "/about" },
+      { label: "Services", to: "/services" },
+      { label: "Blog", to: "/blog" },
+      { label: "Contact", to: "/contact" },
+    ],
+  },
+  {
+    title: "Support",
+    links: [
+      { label: "Track order", to: "/track" },
+      { label: "Returns & after-sales", to: "/returns" },
+      { label: "My account", to: "/account" },
+      { label: "Wishlist", to: "/wishlist" },
+    ],
+  },
+  {
+    title: "Policies",
+    links: [
+      { label: "Returns policy", to: "/returns" },
+      { label: "Shipping & delivery", to: "/services" },
+      { label: "Warranty", to: "/returns" },
+      { label: "Contact us", to: "/contact" },
+    ],
+  },
 ];
+
 
 export function Footer() {
   const { data: storeSettings } = useQuery({
