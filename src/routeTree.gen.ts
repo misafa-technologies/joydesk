@@ -13,6 +13,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -63,6 +64,11 @@ const ShopRoute = ShopRouteImport.update({
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReturnsRoute = ReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -237,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/returns': typeof ReturnsRoute
   '/services': typeof ServicesRoute
   '/shop': typeof ShopRoute
   '/track': typeof TrackRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/returns': typeof ReturnsRoute
   '/services': typeof ServicesRoute
   '/shop': typeof ShopRoute
   '/track': typeof TrackRoute
@@ -311,6 +319,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/returns': typeof ReturnsRoute
   '/services': typeof ServicesRoute
   '/shop': typeof ShopRoute
   '/track': typeof TrackRoute
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/quote'
     | '/reset-password'
+    | '/returns'
     | '/services'
     | '/shop'
     | '/track'
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/quote'
     | '/reset-password'
+    | '/returns'
     | '/services'
     | '/shop'
     | '/track'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/quote'
     | '/reset-password'
+    | '/returns'
     | '/services'
     | '/shop'
     | '/track'
@@ -461,6 +473,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   QuoteRoute: typeof QuoteRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ReturnsRoute: typeof ReturnsRoute
   ServicesRoute: typeof ServicesRoute
   ShopRoute: typeof ShopRoute
   TrackRoute: typeof TrackRoute
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/returns': {
+      id: '/returns'
+      path: '/returns'
+      fullPath: '/returns'
+      preLoaderRoute: typeof ReturnsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -769,6 +789,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   QuoteRoute: QuoteRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ReturnsRoute: ReturnsRoute,
   ServicesRoute: ServicesRoute,
   ShopRoute: ShopRoute,
   TrackRoute: TrackRoute,
