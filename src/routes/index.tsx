@@ -121,9 +121,10 @@ function Home() {
               <div><span className="text-xl font-semibold text-foreground">4.9★</span><br />Avg. rating</div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {CATEGORIES.slice(0, 4).map((category, index) => <Link key={category.slug} to="/shop" search={{ category: category.slug }} className={`group relative overflow-hidden rounded-md border border-border bg-card ${index === 0 ? "col-span-2" : ""}`}><img src={category.img} alt={category.name} className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${index === 0 ? "h-56" : "h-40"}`} /><div className="absolute inset-x-0 bottom-0 bg-background/90 p-3 backdrop-blur-sm"><p className="text-sm font-semibold">{category.name}</p><p className="text-xs text-muted-foreground">{category.count}</p></div></Link>)}
+          <div className="lg:pl-6">
+            <CategoryCarousel3D items={CATEGORIES} loading={categoriesLoading} />
           </div>
+
         </div>
       </section>
 
