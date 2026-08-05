@@ -28,7 +28,7 @@ export function CategoryCarousel3D({ items, loading }: { items: Carousel3DItem[]
     const n = Math.max(items.length, 3);
     // radius that keeps neighbouring cards from overlapping
     const radius = Math.round((cardW * 0.62) / Math.tan(Math.PI / n) + cardW * 0.15);
-    const stageH = cardH + 90;
+    const stageH = cardH + 130;
     return { cardW, cardH, radius, stageH };
   }, [width, items.length]);
 
