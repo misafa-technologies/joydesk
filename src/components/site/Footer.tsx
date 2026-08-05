@@ -38,16 +38,21 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2">
               {storeSettings?.logo_url ? (
-                <img src={storeSettings.logo_url} alt={storeName} className="h-8 w-auto max-w-[8rem] object-contain" />
+                <img
+                  src={storeSettings.logo_url}
+                  alt={storeName}
+                  className="h-10 w-auto max-w-[10rem] object-contain sm:h-12 sm:max-w-[13rem]"
+                />
               ) : (
                 <>
-                  <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold">
+                  <div className="grid h-10 w-10 place-items-center rounded-md bg-primary text-primary-foreground font-bold">
                     {storeName.charAt(0)}
                   </div>
-                  <span className="text-lg font-semibold">{storeName}</span>
+                  <span className="text-xl font-semibold">{storeName}</span>
                 </>
               )}
             </Link>
+
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
               Comfort meets productivity. Premium office furniture and tech for teams that build the future.
             </p>

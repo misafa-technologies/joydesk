@@ -146,3 +146,49 @@
     color: var(--color-foreground);
   }
 }
+
+/* 3D category carousel */
+.carousel3d-stage {
+  position: relative;
+  width: 100%;
+  perspective: 1400px;
+  perspective-origin: 50% 45%;
+}
+
+.carousel3d-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  animation: carousel3d-spin 22s linear infinite;
+}
+
+.carousel3d-card {
+  position: absolute;
+  backface-visibility: hidden;
+  top: 0;
+  left: 0;
+  display: block;
+  border-radius: 1rem;
+  transition: filter 0.4s ease;
+}
+
+.carousel3d-card:hover {
+  filter: brightness(1.06) saturate(1.05);
+}
+
+.carousel3d-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
+
+@keyframes carousel3d-spin {
+  from { transform: rotateX(-8deg) rotateY(0deg); }
+  to { transform: rotateX(-8deg) rotateY(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel3d-ring { animation: none; transform: rotateX(-8deg); }
+}

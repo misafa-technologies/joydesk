@@ -4,6 +4,8 @@ import { ArrowRight, Truck, ShieldCheck, Lock, Award, Building2, MapPin, Star } 
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { CategoryCarousel3D } from "@/components/site/CategoryCarousel3D";
+
 import catChairs from "@/assets/cat-chairs.jpg";
 import catDesks from "@/assets/cat-desks.jpg";
 import catLaptops from "@/assets/cat-laptops.jpg";
@@ -31,16 +33,9 @@ const FALLBACK_IMAGES: Record<string, string> = {
 
 type HomeCategory = { name: string; slug: string; img: string; count: string };
 
-const FALLBACK_CATEGORIES: HomeCategory[] = [
-  { name: "Office Chairs", slug: "chairs", img: catChairs, count: "Shop now" },
-  { name: "Standing Desks", slug: "desks", img: catDesks, count: "Shop now" },
-  { name: "Business Laptops", slug: "laptops", img: catLaptops, count: "Shop now" },
-  { name: "Monitors", slug: "monitors", img: catMonitors, count: "Shop now" },
-];
-
 /** Live categories, images and counts straight from the admin catalogue. */
-function useHomeCategories(): HomeCategory[] {
-  const { data } = useQuery({
+function useHomeCategories(): { categories: HomeCategory[]; loading: boolean } {
+  const { data, isPending } = useQuery({
     queryKey: ["home-categories"],
     staleTime: 60_000,
     queryFn: async () => {
@@ -62,8 +57,9 @@ function useHomeCategories(): HomeCategory[] {
       }));
     },
   });
-  return data?.length ? data : FALLBACK_CATEGORIES;
+  return { categories: data ?? [], loading: isPending };
 }
+
 
 
 const FEATURES = [
@@ -91,7 +87,8 @@ const TESTIMONIALS = [
 ];
 
 function Home() {
-  const CATEGORIES = useHomeCategories();
+  const { categories: CATEGORIES, loading: categoriesLoading } = useHomeCategories();
+
   return (
 
     <div className="flex min-h-screen flex-col bg-background">
@@ -126,9 +123,10 @@ function Home() {
               <div><span className="text-xl font-semibold text-foreground">4.9★</span><br />Avg. rating</div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {CATEGORIES.slice(0, 4).map((category, index) => <Link key={category.slug} to="/shop" search={{ category: category.slug }} className={`group relative overflow-hidden rounded-md border border-border bg-card ${index === 0 ? "col-span-2" : ""}`}><img src={category.img} alt={category.name} className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${index === 0 ? "h-56" : "h-40"}`} /><div className="absolute inset-x-0 bottom-0 bg-background/90 p-3 backdrop-blur-sm"><p className="text-sm font-semibold">{category.name}</p><p className="text-xs text-muted-foreground">{category.count}</p></div></Link>)}
+          <div className="lg:pl-6">
+            <CategoryCarousel3D items={CATEGORIES} loading={categoriesLoading} />
           </div>
+
         </div>
       </section>
 
