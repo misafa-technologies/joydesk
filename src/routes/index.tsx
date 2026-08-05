@@ -31,16 +31,9 @@ const FALLBACK_IMAGES: Record<string, string> = {
 
 type HomeCategory = { name: string; slug: string; img: string; count: string };
 
-const FALLBACK_CATEGORIES: HomeCategory[] = [
-  { name: "Office Chairs", slug: "chairs", img: catChairs, count: "Shop now" },
-  { name: "Standing Desks", slug: "desks", img: catDesks, count: "Shop now" },
-  { name: "Business Laptops", slug: "laptops", img: catLaptops, count: "Shop now" },
-  { name: "Monitors", slug: "monitors", img: catMonitors, count: "Shop now" },
-];
-
 /** Live categories, images and counts straight from the admin catalogue. */
-function useHomeCategories(): HomeCategory[] {
-  const { data } = useQuery({
+function useHomeCategories(): { categories: HomeCategory[]; loading: boolean } {
+  const { data, isPending } = useQuery({
     queryKey: ["home-categories"],
     staleTime: 60_000,
     queryFn: async () => {
@@ -62,8 +55,9 @@ function useHomeCategories(): HomeCategory[] {
       }));
     },
   });
-  return data?.length ? data : FALLBACK_CATEGORIES;
+  return { categories: data ?? [], loading: isPending };
 }
+
 
 
 const FEATURES = [
