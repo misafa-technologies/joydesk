@@ -89,7 +89,7 @@ export const setOrderPaymentStatus = createServerFn({ method: "POST" })
       actor_id: userId,
     });
 
-    if (payment && data.paymentStatus !== "paid" && payment.status === "success") {
+    if (payment && payment.status === "success") {
       await supabaseAdmin
         .from("payments")
         .update({
