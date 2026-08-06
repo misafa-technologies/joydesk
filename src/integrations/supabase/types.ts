@@ -796,6 +796,60 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_requests: {
+        Row: {
+          admin_note: string | null
+          budget: string | null
+          company: string
+          contact_person: string
+          created_at: string
+          email: string
+          id: string
+          notes: string | null
+          other_items: string | null
+          phone: string
+          quantity: string | null
+          selected_products: Json
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          budget?: string | null
+          company: string
+          contact_person: string
+          created_at?: string
+          email: string
+          id?: string
+          notes?: string | null
+          other_items?: string | null
+          phone: string
+          quantity?: string | null
+          selected_products?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          budget?: string | null
+          company?: string
+          contact_person?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          other_items?: string | null
+          phone?: string
+          quantity?: string | null
+          selected_products?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           author_name: string | null
