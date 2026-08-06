@@ -390,3 +390,90 @@ function AdminOrders() {
     </div>
   );
 }
+
+/** Guarded payment-status change: paid is blocked here, reversals need a reason (and admin email for auto M-Pesa). */
+function PaymentChangeDialog({
+  change,
+  onClose,
+  onDone,
+}: {
+  change: { order: Order; next: string } | null;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const setStatus = useServerFn(setOrderPaymentStatus);
+  const [reason, setReason] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const wasPaid = change?.order.payment_status === "paid";
+  const blocked = change?.next === "paid";
+
+  async function submit() {
+    if (!change) return;
+    setBusy(true);
+    try {
+      const res = (await setStatus({
+        data: { orderId: change.order.id, paymentStatus: change.next, reason, adminEmail },
+      })) as { message: string };
+      toast.success(res.message);
+      setReason("");
+      setAdminEmail("");
+      onDone();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not change the payment status");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={!!change} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-primary" /> Change payment status
+          </DialogTitle>
+          <DialogDescription>
+            {blocked
+              ? "Orders cannot be marked paid here. Use Payments → “Mark paid manually” so the M-Pesa payment is verified first."
+              : `Set ${change?.order.order_number} from ${change?.order.payment_status} to ${change?.next}.`}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!blocked && (
+          <div className="space-y-3">
+            {wasPaid && (
+              <>
+                <div>
+                  <Label htmlFor="pc-reason">Reason</Label>
+                  <Input
+                    id="pc-reason"
+                    value={reason}
+                    maxLength={500}
+                    placeholder="Why is this payment being reversed?"
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pc-email">Your admin email (only for automatic M-Pesa payments)</Label>
+                  <Input
+                    id="pc-email"
+                    type="email"
+                    value={adminEmail}
+                    maxLength={200}
+                    placeholder="admin@example.com"
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+            <Button className="w-full" disabled={busy} onClick={submit}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm change"}
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
