@@ -232,6 +232,15 @@ function AdminOrders() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      aria-label="Select all orders"
+                      checked={!!filtered.length && filtered.every((o) => checked[o.id])}
+                      onCheckedChange={(v) =>
+                        setChecked(v ? Object.fromEntries(filtered.map((o) => [o.id, true])) : {})
+                      }
+                    />
+                  </TableHead>
                   <TableHead>Order</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Total</TableHead>
@@ -244,6 +253,13 @@ function AdminOrders() {
               <TableBody>
                 {filtered.map((o) => (
                   <TableRow key={o.id}>
+                    <TableCell>
+                      <Checkbox
+                        aria-label={`Select order ${o.order_number}`}
+                        checked={!!checked[o.id]}
+                        onCheckedChange={(v) => setChecked((c) => ({ ...c, [o.id]: !!v }))}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{o.order_number}</TableCell>
                     <TableCell>{o.customer_name}</TableCell>
                     <TableCell>{formatKES(o.total)}</TableCell>
@@ -256,7 +272,7 @@ function AdminOrders() {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Select value={o.payment_status} onValueChange={(v) => updateMutation.mutate({ id: o.id, patch: { payment_status: v } })}>
+                      <Select value={o.payment_status} onValueChange={(v) => setPayChange({ order: o, next: v })}>
                         <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {PAYMENT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -265,6 +281,9 @@ function AdminOrders() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{formatDateTime(o.created_at)}</TableCell>
                     <TableCell className="text-right">
+                      <Button size="icon" variant="ghost" title="Print delivery note" onClick={() => printDeliveryNotes([o])}>
+                        <Printer className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => setSelected(o)}>
                         <Eye className="h-4 w-4" />
                       </Button>
