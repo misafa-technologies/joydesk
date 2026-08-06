@@ -138,6 +138,58 @@ function AdminOrders() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const { data: branding } = useQuery({
+    queryKey: ["admin", "store-branding"],
+    staleTime: 300_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("store_settings")
+        .select("store_name, tagline, support_phone, support_email, logo_url")
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const checkedIds = useMemo(() => Object.keys(checked).filter((id) => checked[id]), [checked]);
+
+  /** Builds and opens printable A4 delivery notes for the given orders. */
+  async function printDeliveryNotes(list: Order[]) {
+    if (!list.length) return;
+    setPrinting(true);
+    try {
+      const ids = list.map((o) => o.id);
+      const [itemsRes, shipRes] = await Promise.all([
+        supabase.from("order_items").select("order_id, product_name, quantity, unit_price").in("order_id", ids),
+        supabase.from("shipments").select("order_id, tracking_number, courier, courier_contact").in("order_id", ids),
+      ]);
+      if (itemsRes.error) throw itemsRes.error;
+      if (shipRes.error) throw shipRes.error;
+
+      const notes: DeliveryNoteData[] = list.map((order) => ({
+        order,
+        items: (itemsRes.data ?? [])
+          .filter((i) => i.order_id === order.id)
+          .map((i) => ({ product_name: i.product_name, quantity: i.quantity, unit_price: i.unit_price })),
+        shipment: (shipRes.data ?? []).find((s) => s.order_id === order.id) ?? null,
+      }));
+
+      previewDeliveryNote(notes, {
+        storeName: branding?.store_name,
+        tagline: branding?.tagline,
+        supportPhone: branding?.support_phone,
+        supportEmail: branding?.support_email,
+        logoUrl: branding?.logo_url,
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not build the delivery note");
+    } finally {
+      setPrinting(false);
+    }
+  }
+
+
+
 
   return (
     <div className="space-y-6">
