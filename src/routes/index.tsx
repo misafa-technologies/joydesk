@@ -71,14 +71,19 @@ const FEATURES = [
   { icon: MapPin, title: "Nationwide", desc: "Delivered to your doorstep" },
 ];
 
-const PRODUCTS = [
-  { name: "Ergo Pro Mesh Chair", price: "KSh 32,500", old: "KSh 42,000", img: catChairs, tag: "Best Seller" },
-  { name: "FlexHeight Standing Desk", price: "KSh 58,900", old: null, img: catDesks, tag: "New" },
-  { name: "ProBook Business 15", price: "KSh 128,000", old: "KSh 145,000", img: catLaptops, tag: "Flash Deal" },
-  { name: "UltraWide 34\" Monitor", price: "KSh 78,500", old: null, img: catMonitors, tag: "Trending" },
-];
-
-const BRANDS = ["HP", "Dell", "Lenovo", "Apple", "Asus", "Acer", "MSI", "Logitech", "Canon", "Brother", "Samsung"];
+/** Brands come from the admin catalogue — nothing hard-coded. */
+function useBrands() {
+  const { data } = useQuery({
+    queryKey: ["home-brands"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("brands").select("id, name, slug, logo_url").order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  return data ?? [];
+}
 
 const TESTIMONIALS = [
   { name: "Amina W.", role: "Ops Lead, Nairobi", text: "The ergonomic chairs transformed our team's comfort. Delivery was flawless." },
@@ -173,48 +178,49 @@ function Home() {
         </div>
       </section>
 
-      {/* FEATURED PRODUCTS */}
+      {/* CORPORATE BULK QUOTATION */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="flex items-end justify-between mb-10">
+        <div className="grid gap-8 rounded-3xl border border-border bg-card p-8 lg:grid-cols-2 lg:items-center lg:p-12">
           <div>
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">Featured products</h2>
-            <p className="mt-2 text-muted-foreground">Best sellers, new arrivals, and flash deals.</p>
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <Building2 className="h-3.5 w-3.5" /> For businesses
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight">Corporate bulk quotation</h2>
+            <p className="mt-3 text-muted-foreground leading-relaxed">
+              Kitting out a team, a floor or a whole office? Pick the products you need straight from our catalogue — or
+              describe anything that isn't listed — and we'll send a tailored quote within one business day.
+            </p>
+            <Link to="/quote" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
+              Request a quotation <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {PRODUCTS.map((p) => (
-            <a key={p.name} href="#" className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl transition-all">
-              <div className="relative aspect-square bg-muted/30 overflow-hidden">
-                <span className="absolute left-3 top-3 z-10 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-secondary-foreground">{p.tag}</span>
-                <img src={p.img} alt={p.name} loading="lazy" width={800} height={800} className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500" />
-              </div>
-              <div className="p-5">
-                <div className="flex items-center gap-0.5 text-secondary">
-                  {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-3 w-3 fill-current" />)}
-                  <span className="ml-1.5 text-xs text-muted-foreground">(128)</span>
-                </div>
-                <h3 className="mt-2 font-semibold">{p.name}</h3>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-lg font-bold text-primary">{p.price}</span>
-                  {p.old && <span className="text-sm text-muted-foreground line-through">{p.old}</span>}
-                </div>
-              </div>
-            </a>
-          ))}
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {["Select products or describe your own", "Volume pricing on 10+ units", "Dedicated account manager", "Delivery and installation included"].map((point) => (
+              <li key={point} className="rounded-2xl border border-border bg-background p-4 text-sm text-muted-foreground">{point}</li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      {/* BRANDS */}
-      <section className="border-y border-border bg-muted/20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">Trusted brands we carry</p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {BRANDS.map((b) => (
-              <span key={b} className="text-xl font-bold tracking-tight text-muted-foreground/70 hover:text-foreground transition-colors">{b}</span>
-            ))}
+      {/* BRANDS — managed in admin */}
+      {brands.length > 0 && (
+        <section className="border-y border-border bg-muted/20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+            <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">Trusted brands we carry</p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
+              {brands.map((b) => (
+                <Link key={b.id} to="/shop" search={{ brand: b.slug }} className="group inline-flex items-center gap-2">
+                  {b.logo_url ? (
+                    <img src={b.logo_url} alt={b.name} loading="lazy" className="h-8 w-auto max-w-[120px] object-contain opacity-70 transition-opacity group-hover:opacity-100" />
+                  ) : (
+                    <span className="text-xl font-bold tracking-tight text-muted-foreground/70 transition-colors group-hover:text-foreground">{b.name}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* TESTIMONIALS */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
