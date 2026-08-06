@@ -140,7 +140,8 @@ function TrackPage() {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Shipment</h2>
               <div className="mt-3 space-y-1 text-muted-foreground">
                 <p>Tracking number: <span className="font-medium text-foreground">{data.shipment?.tracking_number ?? "Assigned once dispatched"}</span></p>
-                <p>Courier: <span className="font-medium text-foreground">{data.shipment?.courier ?? "—"}</span></p>
+                <p>Courier: <span className="font-medium text-foreground">{data.shipment?.courier ?? "Pending assignment"}</span></p>
+                <p>Courier contact: <span className="font-medium text-foreground">{data.shipment?.courier_contact ?? "—"}</span></p>
                 <p>Current location: <span className="font-medium text-foreground">{data.shipment?.current_location ?? "Warehouse, Nairobi"}</span></p>
                 <p>
                   Destination:{" "}
