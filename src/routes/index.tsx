@@ -93,6 +93,7 @@ const TESTIMONIALS = [
 
 function Home() {
   const { categories: CATEGORIES, loading: categoriesLoading } = useHomeCategories();
+  const brands = useBrands();
 
   return (
 
