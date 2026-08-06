@@ -42,6 +42,9 @@ function AdminOrders() {
   const [paymentStatus, setPaymentStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Order | null>(null);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [printing, setPrinting] = useState(false);
+  const [payChange, setPayChange] = useState<{ order: Order; next: string } | null>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin", "orders"],
