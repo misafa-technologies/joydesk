@@ -367,11 +367,26 @@ function AdminOrders() {
                   <p className="text-xs text-muted-foreground">Tracking number: <span className="font-medium text-foreground">{shipment.tracking_number}</span></p>
                 )}
               </div>
+
+              <Button variant="outline" className="w-full" disabled={printing} onClick={() => printDeliveryNotes([selected])}>
+                {printing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                Print A4 delivery note
+              </Button>
             </div>
           )}
 
         </DialogContent>
       </Dialog>
+
+      <PaymentChangeDialog
+        change={payChange}
+        onClose={() => setPayChange(null)}
+        onDone={() => {
+          setPayChange(null);
+          queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+          queryClient.invalidateQueries({ queryKey: ["admin", "payments"] });
+        }}
+      />
     </div>
   );
 }
