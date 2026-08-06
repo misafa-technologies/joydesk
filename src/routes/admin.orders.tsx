@@ -211,6 +211,15 @@ function AdminOrders() {
             {PAYMENT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Button
+          variant="outline"
+          className="sm:ml-auto"
+          disabled={!checkedIds.length || printing}
+          onClick={() => printDeliveryNotes(filtered.filter((o) => checked[o.id]))}
+        >
+          {printing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+          Print delivery notes{checkedIds.length ? ` (${checkedIds.length})` : ""}
+        </Button>
       </div>
 
       <Card>
