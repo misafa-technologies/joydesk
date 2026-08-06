@@ -76,7 +76,7 @@ function AdminQuotes() {
   }, [data, status, search]);
 
   const update = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: { status?: string; admin_note?: string } }) => {
       const { error } = await supabase.from("quote_requests").update(patch).eq("id", id);
       if (error) throw error;
     },
