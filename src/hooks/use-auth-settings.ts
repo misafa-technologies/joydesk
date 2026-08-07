@@ -8,6 +8,7 @@ export type AuthSettings = {
   google_enabled: boolean;
   apple_enabled: boolean;
   social_note: string | null;
+  google_client_id: string | null;
 };
 
 const DEFAULTS: AuthSettings = {
@@ -16,6 +17,7 @@ const DEFAULTS: AuthSettings = {
   google_enabled: false,
   apple_enabled: false,
   social_note: null,
+  google_client_id: null,
 };
 
 export function useAuthSettings() {
@@ -32,6 +34,7 @@ export function useAuthSettings() {
         google_enabled: data.google_enabled,
         apple_enabled: data.apple_enabled,
         social_note: data.social_note,
+        google_client_id: data.google_client_id,
       };
     },
     staleTime: 60_000,

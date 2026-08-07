@@ -35,6 +35,7 @@ function AdminAuthSettings() {
     google_enabled: false,
     apple_enabled: false,
     social_note: "",
+    google_client_id: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -46,6 +47,7 @@ function AdminAuthSettings() {
         google_enabled: data.google_enabled,
         apple_enabled: data.apple_enabled,
         social_note: data.social_note ?? "",
+        google_client_id: data.google_client_id ?? "",
       });
     }
   }, [data]);
@@ -93,6 +95,7 @@ function AdminAuthSettings() {
       google_enabled: form.google_enabled,
       apple_enabled: form.apple_enabled,
       social_note: form.social_note.trim() || null,
+      google_client_id: form.google_client_id.trim() || null,
     };
     const result = data?.id
       ? await supabase.from("auth_settings").update(payload).eq("id", data.id)
@@ -145,6 +148,24 @@ function AdminAuthSettings() {
           checked={form.apple_enabled}
           onChange={(v) => setForm((f) => ({ ...f, apple_enabled: v }))}
         />
+
+        {form.google_enabled && (
+          <label className="block pt-2">
+            <span className="mb-1.5 block text-sm font-medium">Google OAuth Client ID (optional)</span>
+            <input
+              value={form.google_client_id}
+              maxLength={255}
+              placeholder="1234567890-abc123.apps.googleusercontent.com"
+              onChange={(e) => setForm((f) => ({ ...f, google_client_id: e.target.value }))}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-primary/30 focus:ring-2"
+            />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Paste your own Google Cloud OAuth Web Client ID to sign customers in directly with Google (no provider
+              redirect). Add this site's domain to the client's Authorized JavaScript origins. Leave blank to use the
+              standard redirect flow.
+            </span>
+          </label>
+        )}
 
         <label className="block pt-2">
           <span className="mb-1.5 block text-sm font-medium">Social sign-in note (optional)</span>
