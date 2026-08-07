@@ -25,17 +25,27 @@ function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const sendReset = useServerFn(requestPasswordReset);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    setSent(true);
-    toast.success("Reset link sent", { description: "Check your inbox." });
+    try {
+      // Branded reset through the store's own SMTP, linking back to this exact domain.
+      const res = (await sendReset({ data: { email } })) as { fallback: boolean };
+      if (res.fallback) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+      }
+      setSent(true);
+      toast.success("Reset link sent", { description: "Check your inbox." });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send the reset link");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
