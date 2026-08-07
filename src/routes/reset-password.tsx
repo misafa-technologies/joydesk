@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
@@ -16,6 +16,10 @@ export const Route = createFileRoute("/reset-password")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { token_hash?: string; type?: string } => ({
+    token_hash: typeof s.token_hash === "string" ? s.token_hash : undefined,
+    type: typeof s.type === "string" ? s.type : undefined,
+  }),
   component: ResetPassword,
 });
 
@@ -23,7 +27,28 @@ function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { token_hash } = Route.useSearch();
+
+  // Links minted on our own domain arrive with a hashed recovery token that has
+  // to be exchanged for a session before the password can be changed.
+  useEffect(() => {
+    if (!token_hash) return;
+    let active = true;
+    setVerifying(true);
+    supabase.auth
+      .verifyOtp({ type: "recovery", token_hash })
+      .then(({ error }) => {
+        if (!active) return;
+        if (error) setLinkError(error.message);
+      })
+      .finally(() => active && setVerifying(false));
+    return () => {
+      active = false;
+    };
+  }, [token_hash]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
