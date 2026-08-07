@@ -23,6 +23,7 @@ export interface IntegrationSettings {
   notify_payment_received: boolean;
   notify_shipping_update: boolean;
   notify_admin_new_order: boolean;
+  custom_password_reset?: boolean;
 }
 
 export async function loadIntegrationSettings(): Promise<IntegrationSettings | null> {
@@ -68,11 +69,17 @@ async function sendViaResend(s: IntegrationSettings, to: string, subject: string
 async function sendViaSmtp(s: IntegrationSettings, to: string, subject: string, html: string) {
   if (!s.smtp_host || !s.smtp_user) throw new Error("SMTP host and username are required");
   const nodemailer = (await import("nodemailer")).default;
+  const port = s.smtp_port || 587;
+  const host = s.smtp_host.trim();
+  const isGmail = /(^|\.)gmail\.com$|(^|\.)googlemail\.com$/i.test(host);
   const transporter = nodemailer.createTransport({
-    host: s.smtp_host,
-    port: s.smtp_port || 587,
-    secure: !!s.smtp_secure,
-    auth: { user: s.smtp_user, pass: s.smtp_password || "" },
+    host,
+    port,
+    // Port 465 is implicit TLS; 587 upgrades via STARTTLS. Gmail needs this exact pairing.
+    secure: port === 465 ? true : !!s.smtp_secure,
+    requireTLS: port === 587,
+    auth: { user: s.smtp_user, pass: (s.smtp_password || "").replace(/\s+/g, isGmail ? "" : "") },
+    ...(isGmail ? { service: "gmail" as const } : {}),
   });
   await transporter.sendMail({
     from: `${s.from_name || "JoyDesk"} <${s.from_email || s.smtp_user}>`,
