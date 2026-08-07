@@ -170,3 +170,21 @@ export function renderTemplate(key: TemplateKey, d: OrderEmailData): { subject: 
     }
   }
 }
+
+/** Password reset email — link always points at the domain the request came from. */
+export function renderPasswordResetEmail(opts: {
+  storeName?: string;
+  link: string;
+  minutes?: number;
+}): { subject: string; html: string } {
+  const store = opts.storeName || "JoyDesk";
+  const body = `<h1 style="margin:0;font-size:22px">Reset your password</h1>
+  <p style="color:${BRAND.muted};font-size:14px;line-height:22px">We received a request to reset the password for your ${esc(store)} account. This link expires in ${opts.minutes ?? 60} minutes and can only be used once.</p>
+  ${button(opts.link, "Set a new password")}
+  <p style="color:${BRAND.muted};font-size:12px;line-height:20px;margin-top:22px;word-break:break-all">If the button doesn't work, paste this into your browser:<br><a href="${esc(opts.link)}" style="color:${BRAND.primary}">${esc(opts.link)}</a></p>
+  <p style="color:${BRAND.muted};font-size:12px;line-height:20px">Didn't ask for this? You can safely ignore this email — your password stays unchanged.</p>`;
+  return {
+    subject: `Reset your ${store} password`,
+    html: shell({ title: "Reset your password", preview: "Reset your password", body, storeName: store }),
+  };
+}
