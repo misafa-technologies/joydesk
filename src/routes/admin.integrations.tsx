@@ -161,6 +161,7 @@ function Integrations() {
         notify_payment_received: cfg["notify_payment_received"] !== false,
         notify_shipping_update: cfg["notify_shipping_update"] !== false,
         notify_admin_new_order: cfg["notify_admin_new_order"] !== false,
+        custom_password_reset: cfg["custom_password_reset"] === true,
       };
       const { error } = cfg["id"]
         ? await supabase.from("integration_settings").update(payload).eq("id", cfg["id"] as string)
@@ -312,6 +313,31 @@ function Integrations() {
               <div className="self-end">
                 <Toggle checked={cfg["smtp_secure"] === true} onChange={(v) => setC("smtp_secure", v)} label="Use TLS/SSL (port 465)" />
               </div>
+              <div className="sm:col-span-2 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border p-3">
+                <span className="text-xs text-muted-foreground">Quick presets:</span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCfg((prev) => ({ ...prev, smtp_host: "smtp.gmail.com", smtp_port: 587, smtp_secure: false }))
+                  }
+                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                >
+                  Gmail (STARTTLS 587)
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCfg((prev) => ({ ...prev, smtp_host: "smtp.gmail.com", smtp_port: 465, smtp_secure: true }))
+                  }
+                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                >
+                  Gmail (SSL 465)
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  For normal Gmail accounts use your address as the username and a Google App Password (2-step
+                  verification must be on).
+                </span>
+              </div>
             </>
           )}
         </div>
@@ -321,7 +347,16 @@ function Integrations() {
           <Toggle checked={cfg["notify_payment_received"] !== false} onChange={(v) => setC("notify_payment_received", v)} label="Payment received" />
           <Toggle checked={cfg["notify_shipping_update"] !== false} onChange={(v) => setC("notify_shipping_update", v)} label="Shipping updates" />
           <Toggle checked={cfg["notify_admin_new_order"] !== false} onChange={(v) => setC("notify_admin_new_order", v)} label="Admin new-order alerts" />
+          <Toggle
+            checked={cfg["custom_password_reset"] === true}
+            onChange={(v) => setC("custom_password_reset", v)}
+            label="Branded password reset emails (via this SMTP)"
+          />
         </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          With branded resets on, reset links are sent from your own sender and always point back to the domain the
+          customer is browsing — your Vercel or custom domain, never a Lovable link.
+        </p>
 
         <div className="mt-5 flex flex-wrap items-end gap-3">
           <div className="min-w-[240px] flex-1">
