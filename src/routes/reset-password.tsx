@@ -67,6 +67,12 @@ function ResetPassword() {
       <Header />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
         <h1 className="text-2xl font-bold tracking-tight">Set a new password</h1>
+        {verifying && <p className="mt-2 text-sm text-muted-foreground">Verifying your reset link…</p>}
+        {linkError && (
+          <p className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            This reset link is invalid or has expired. Request a new one from the “Forgot password” page.
+          </p>
+        )}
         <form onSubmit={submit} className="mt-8 space-y-4">
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium">New password</span>
