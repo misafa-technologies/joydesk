@@ -1,4 +1,5 @@
 // Server-only notification dispatch: SMTP/Resend email + Africa's Talking SMS.
+import { getRequestHeader, getRequestUrl } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { renderTemplate, type OrderEmailData, type TemplateKey } from "@/lib/email-templates";
 
@@ -23,6 +24,18 @@ export interface IntegrationSettings {
   notify_payment_received: boolean;
   notify_shipping_update: boolean;
   notify_admin_new_order: boolean;
+  custom_password_reset?: boolean;
+}
+
+/** Origin of the request being handled, so links match the visitor's domain. */
+export function currentOrigin(): string {
+  try {
+    const origin = getRequestHeader("origin") ?? getRequestUrl().origin;
+    if (origin) return origin.replace(/\/$/, "");
+  } catch {
+    /* no request context (background job) */
+  }
+  return "https://joydesk.lovable.app";
 }
 
 export async function loadIntegrationSettings(): Promise<IntegrationSettings | null> {
@@ -68,11 +81,18 @@ async function sendViaResend(s: IntegrationSettings, to: string, subject: string
 async function sendViaSmtp(s: IntegrationSettings, to: string, subject: string, html: string) {
   if (!s.smtp_host || !s.smtp_user) throw new Error("SMTP host and username are required");
   const nodemailer = (await import("nodemailer")).default;
+  const port = s.smtp_port || 587;
+  const host = s.smtp_host.trim();
+  const isGmail = /(^|\.)gmail\.com$|(^|\.)googlemail\.com$/i.test(host);
   const transporter = nodemailer.createTransport({
-    host: s.smtp_host,
-    port: s.smtp_port || 587,
-    secure: !!s.smtp_secure,
-    auth: { user: s.smtp_user, pass: s.smtp_password || "" },
+    host,
+    port,
+    // Port 465 is implicit TLS; 587 upgrades via STARTTLS. Gmail needs this exact pairing.
+    secure: port === 465 ? true : !!s.smtp_secure,
+    requireTLS: port === 587,
+    // Gmail app passwords are shown in 4-char groups; strip the spaces.
+    auth: { user: s.smtp_user, pass: isGmail ? (s.smtp_password || "").replace(/\s+/g, "") : s.smtp_password || "" },
+    ...(isGmail ? { service: "gmail" as const } : {}),
   });
   await transporter.sendMail({
     from: `${s.from_name || "JoyDesk"} <${s.from_email || s.smtp_user}>`,
@@ -171,7 +191,7 @@ export async function notifyOrderEvent(
   orderId: string,
   key: Extract<TemplateKey, "order_confirmation" | "payment_received" | "shipping_update" | "admin_new_order">,
   extra: Partial<OrderEmailData> = {},
-  siteUrl = "https://joydesk.lovable.app",
+  siteUrl = currentOrigin(),
 ) {
   const s = await loadIntegrationSettings();
   const { data: order } = await supabaseAdmin.from("orders").select("*").eq("id", orderId).maybeSingle();

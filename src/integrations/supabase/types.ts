@@ -67,6 +67,7 @@ export type Database = {
           apple_enabled: boolean
           created_at: string
           email_enabled: boolean
+          google_client_id: string | null
           google_enabled: boolean
           id: string
           signup_enabled: boolean
@@ -77,6 +78,7 @@ export type Database = {
           apple_enabled?: boolean
           created_at?: string
           email_enabled?: boolean
+          google_client_id?: string | null
           google_enabled?: boolean
           id?: string
           signup_enabled?: boolean
@@ -87,6 +89,7 @@ export type Database = {
           apple_enabled?: boolean
           created_at?: string
           email_enabled?: boolean
+          google_client_id?: string | null
           google_enabled?: boolean
           id?: string
           signup_enabled?: boolean
@@ -276,6 +279,7 @@ export type Database = {
           at_sender_id: string | null
           at_username: string | null
           created_at: string
+          custom_password_reset: boolean
           email_enabled: boolean
           email_provider: string
           from_email: string | null
@@ -301,6 +305,7 @@ export type Database = {
           at_sender_id?: string | null
           at_username?: string | null
           created_at?: string
+          custom_password_reset?: boolean
           email_enabled?: boolean
           email_provider?: string
           from_email?: string | null
@@ -326,6 +331,7 @@ export type Database = {
           at_sender_id?: string | null
           at_username?: string | null
           created_at?: string
+          custom_password_reset?: boolean
           email_enabled?: boolean
           email_provider?: string
           from_email?: string | null

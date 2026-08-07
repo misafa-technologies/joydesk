@@ -54,7 +54,7 @@ export const sendTestNotification = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await assertStaff(context as never);
-    const { sendEmail, sendSms } = await import("@/lib/notifications.server");
+    const { sendEmail, sendSms, currentOrigin } = await import("@/lib/notifications.server");
     if (data.channel === "sms") {
       return await sendSms({ to: data.to, message: "JoyDesk test SMS — your Africa's Talking setup works." });
     }
@@ -67,7 +67,7 @@ export const sendTestNotification = createServerFn({ method: "POST" })
       discount: 0,
       deliveryFee: 0,
       total: 0,
-      siteUrl: "https://joydesk.lovable.app",
+      siteUrl: currentOrigin(),
       subjectOverride: "JoyDesk email test",
       message: "If you can read this, your email configuration is working correctly.",
     });

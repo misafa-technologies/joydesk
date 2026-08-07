@@ -17,7 +17,7 @@ export const Route = createFileRoute("/shop")({
       { property: "og:type", content: "website" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { category?: string; brand?: string; q?: string } => ({
     category: typeof s.category === "string" ? s.category : undefined,
     brand: typeof s.brand === "string" ? s.brand : undefined,
     q: typeof s.q === "string" ? s.q.slice(0, 100) : undefined,

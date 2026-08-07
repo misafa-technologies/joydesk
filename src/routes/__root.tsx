@@ -15,6 +15,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { CartProvider } from "@/hooks/use-cart";
 import { Toaster } from "@/components/ui/sonner";
 import { FloatingChat } from "@/components/site/FloatingChat";
+import { InstallPrompt } from "@/components/site/InstallPrompt";
 
 
 function NotFoundComponent() {
@@ -90,6 +91,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "theme-color", content: "#0F4C81" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "JoyDesk" },
       { name: "twitter:title", content: "JoyDesk — Comfort Meets Productivity" },
       { name: "twitter:description", content: "Premium office furniture, ergonomic chairs, standing desks, business laptops, monitors and accessories. Transform your workspace with JoyDesk." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/404658e1-edb8-4c88-bddf-a2d3527b8b6c" },
@@ -100,6 +104,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -132,6 +139,7 @@ function RootComponent() {
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <FloatingChat />
+          <InstallPrompt />
           <Toaster position="top-center" richColors />
 
         </CartProvider>

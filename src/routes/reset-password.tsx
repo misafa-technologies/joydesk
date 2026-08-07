@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
@@ -16,6 +16,10 @@ export const Route = createFileRoute("/reset-password")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { token_hash?: string; type?: string } => ({
+    token_hash: typeof s.token_hash === "string" ? s.token_hash : undefined,
+    type: typeof s.type === "string" ? s.type : undefined,
+  }),
   component: ResetPassword,
 });
 
@@ -23,7 +27,28 @@ function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { token_hash } = Route.useSearch();
+
+  // Links minted on our own domain arrive with a hashed recovery token that has
+  // to be exchanged for a session before the password can be changed.
+  useEffect(() => {
+    if (!token_hash) return;
+    let active = true;
+    setVerifying(true);
+    supabase.auth
+      .verifyOtp({ type: "recovery", token_hash })
+      .then(({ error }) => {
+        if (!active) return;
+        if (error) setLinkError(error.message);
+      })
+      .finally(() => active && setVerifying(false));
+    return () => {
+      active = false;
+    };
+  }, [token_hash]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,6 +67,12 @@ function ResetPassword() {
       <Header />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
         <h1 className="text-2xl font-bold tracking-tight">Set a new password</h1>
+        {verifying && <p className="mt-2 text-sm text-muted-foreground">Verifying your reset link…</p>}
+        {linkError && (
+          <p className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            This reset link is invalid or has expired. Request a new one from the “Forgot password” page.
+          </p>
+        )}
         <form onSubmit={submit} className="mt-8 space-y-4">
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium">New password</span>

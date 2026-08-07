@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAuthSettings } from "@/hooks/use-auth-settings";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { GoogleSignInButton } from "@/components/site/GoogleSignInButton";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/auth")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
     redirect: typeof s.redirect === "string" && s.redirect.startsWith("/") ? s.redirect : undefined,
   }),
   component: AuthPage,
@@ -61,6 +62,7 @@ function AuthPage() {
   const emailEnabled = settings?.email_enabled ?? true;
   const signupEnabled = settings?.signup_enabled ?? true;
   const googleEnabled = settings?.google_enabled ?? false;
+  const googleClientId = settings?.google_client_id?.trim() || "";
   const appleEnabled = settings?.apple_enabled ?? false;
   const socialNote = settings?.social_note;
   const noMethodEnabled = !settingsLoading && !emailEnabled && !googleEnabled && !appleEnabled;
@@ -166,7 +168,13 @@ function AuthPage() {
                   </div>
                 )}
                 <div className="space-y-3">
-                  {googleEnabled && (
+                  {googleEnabled && googleClientId ? (
+                    <GoogleSignInButton
+                      clientId={googleClientId}
+                      onSignedIn={() => navigate({ to: redirect ?? "/account", replace: true })}
+                    />
+                  ) : null}
+                  {googleEnabled && !googleClientId && (
                     <button
                       type="button"
                       onClick={() => handleOAuth("google")}
