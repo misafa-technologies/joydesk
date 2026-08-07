@@ -1,4 +1,5 @@
 // Server-only notification dispatch: SMTP/Resend email + Africa's Talking SMS.
+import { getRequestHeader, getRequestUrl } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { renderTemplate, type OrderEmailData, type TemplateKey } from "@/lib/email-templates";
 
@@ -24,6 +25,17 @@ export interface IntegrationSettings {
   notify_shipping_update: boolean;
   notify_admin_new_order: boolean;
   custom_password_reset?: boolean;
+}
+
+/** Origin of the request being handled, so links match the visitor's domain. */
+export function currentOrigin(): string {
+  try {
+    const origin = getRequestHeader("origin") ?? getRequestUrl().origin;
+    if (origin) return origin.replace(/\/$/, "");
+  } catch {
+    /* no request context (background job) */
+  }
+  return "https://joydesk.lovable.app";
 }
 
 export async function loadIntegrationSettings(): Promise<IntegrationSettings | null> {
@@ -179,7 +191,7 @@ export async function notifyOrderEvent(
   orderId: string,
   key: Extract<TemplateKey, "order_confirmation" | "payment_received" | "shipping_update" | "admin_new_order">,
   extra: Partial<OrderEmailData> = {},
-  siteUrl = "https://joydesk.lovable.app",
+  siteUrl = currentOrigin(),
 ) {
   const s = await loadIntegrationSettings();
   const { data: order } = await supabaseAdmin.from("orders").select("*").eq("id", orderId).maybeSingle();

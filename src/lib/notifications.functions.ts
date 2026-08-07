@@ -67,7 +67,7 @@ export const sendTestNotification = createServerFn({ method: "POST" })
       discount: 0,
       deliveryFee: 0,
       total: 0,
-      siteUrl: "https://joydesk.lovable.app",
+      siteUrl: currentOrigin(),
       subjectOverride: "JoyDesk email test",
       message: "If you can read this, your email configuration is working correctly.",
     });
