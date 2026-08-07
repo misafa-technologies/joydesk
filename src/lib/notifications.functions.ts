@@ -54,7 +54,7 @@ export const sendTestNotification = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await assertStaff(context as never);
-    const { sendEmail, sendSms } = await import("@/lib/notifications.server");
+    const { sendEmail, sendSms, currentOrigin } = await import("@/lib/notifications.server");
     if (data.channel === "sms") {
       return await sendSms({ to: data.to, message: "JoyDesk test SMS — your Africa's Talking setup works." });
     }
