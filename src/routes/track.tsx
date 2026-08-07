@@ -18,7 +18,7 @@ export const Route = createFileRoute("/track")({
       { property: "og:type", content: "website" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { order?: string } => ({
     order: typeof s.order === "string" ? s.order : undefined,
   }),
   component: TrackPage,
