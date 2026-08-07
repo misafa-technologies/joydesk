@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { requestPasswordReset } from "@/lib/auth.functions";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 
