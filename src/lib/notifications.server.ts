@@ -78,7 +78,8 @@ async function sendViaSmtp(s: IntegrationSettings, to: string, subject: string, 
     // Port 465 is implicit TLS; 587 upgrades via STARTTLS. Gmail needs this exact pairing.
     secure: port === 465 ? true : !!s.smtp_secure,
     requireTLS: port === 587,
-    auth: { user: s.smtp_user, pass: (s.smtp_password || "").replace(/\s+/g, isGmail ? "" : "") },
+    // Gmail app passwords are shown in 4-char groups; strip the spaces.
+    auth: { user: s.smtp_user, pass: isGmail ? (s.smtp_password || "").replace(/\s+/g, "") : s.smtp_password || "" },
     ...(isGmail ? { service: "gmail" as const } : {}),
   });
   await transporter.sendMail({
