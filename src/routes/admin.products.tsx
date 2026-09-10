@@ -36,6 +36,7 @@ import {
 import { Loader2, Plus, Pencil, Trash2, Minus } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { imageSrc } from "@/lib/media";
 
 export const Route = createFileRoute("/admin/products")({
   head: () => ({
@@ -410,7 +411,7 @@ function AdminProducts() {
                       <TableRow key={p.id}>
                         <TableCell>
                           {p.images?.[0] ? (
-                            <img src={p.images[0]} alt={p.name} className="h-10 w-10 rounded-md border border-border object-cover" />
+                            <img src={imageSrc(p.images[0])!} alt={p.name} className="h-10 w-10 rounded-md border border-border object-cover" />
                           ) : (
                             <div className="h-10 w-10 rounded-md border border-dashed border-border bg-muted" />
                           )}
@@ -605,7 +606,7 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
                     aria-label="Edit category image"
                   >
                     {c.image_url ? (
-                      <img src={c.image_url} alt={c.name} className="h-9 w-9 rounded-md border border-border object-cover" />
+                      <img src={imageSrc(c.image_url)!} alt={c.name} className="h-9 w-9 rounded-md border border-border object-cover" />
                     ) : (
                       <div className="grid h-9 w-9 place-items-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">img</div>
                     )}
@@ -653,7 +654,7 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
                     aria-label="Edit brand logo"
                   >
                     {b.logo_url ? (
-                      <img src={b.logo_url} alt={b.name} className="h-9 w-9 rounded-md border border-border object-cover" />
+                      <img src={imageSrc(b.logo_url)!} alt={b.name} className="h-9 w-9 rounded-md border border-border object-cover" />
                     ) : (
                       <div className="grid h-9 w-9 place-items-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">logo</div>
                     )}

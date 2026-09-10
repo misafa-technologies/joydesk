@@ -3,6 +3,7 @@ import { Star, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { formatKES, discountPercent } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
+import { imageSrc } from "@/lib/media";
 
 export interface ProductLike {
   id: string;
@@ -20,7 +21,7 @@ export interface ProductLike {
 export function ProductCard({ product }: { product: ProductLike }) {
   const cart = useCart();
   const off = discountPercent(Number(product.price), product.compare_price);
-  const image = product.images?.[0] ?? null;
+  const image = imageSrc(product.images?.[0] ?? null);
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">

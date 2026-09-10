@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatKES } from "@/lib/format";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { imageSrc } from "@/lib/media";
 
 export const Route = createFileRoute("/quote")({
   head: () => ({
@@ -211,7 +212,7 @@ function QuotePage() {
               ) : (
                 visible.map((p) => {
                   const active = !!picked[p.id];
-                  const image = Array.isArray(p.images) ? (p.images[0] as string | undefined) : undefined;
+                  const image = imageSrc(Array.isArray(p.images) ? (p.images[0] as string | undefined) : undefined);
                   return (
                     <div key={p.id} className={`flex items-center gap-3 rounded-md border p-2 transition-colors ${active ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted/50"}`}>
                       <button

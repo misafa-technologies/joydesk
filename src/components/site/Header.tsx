@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/hooks/use-cart";
 import { useRoles } from "@/hooks/use-role";
 import { supabase } from "@/integrations/supabase/client";
+import { imageSrc } from "@/lib/media";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -48,7 +49,7 @@ export function Header() {
         <Link to="/" className="flex shrink-0 items-center gap-2">
           {storeSettings?.logo_url ? (
             <img
-              src={storeSettings.logo_url}
+              src={imageSrc(storeSettings.logo_url)!}
               alt={storeSettings.store_name}
               className="h-9 w-auto max-w-[8.5rem] object-contain sm:h-10 sm:max-w-[11rem] lg:h-11 lg:max-w-[13rem]"
             />
