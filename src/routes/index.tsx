@@ -10,6 +10,7 @@ import catChairs from "@/assets/cat-chairs.jpg";
 import catDesks from "@/assets/cat-desks.jpg";
 import catLaptops from "@/assets/cat-laptops.jpg";
 import catMonitors from "@/assets/cat-monitors.jpg";
+import { imageSrc } from "@/lib/media";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -52,7 +53,7 @@ function useHomeCategories(): { categories: HomeCategory[]; loading: boolean } {
       return (cats.data ?? []).map((c) => ({
         name: c.name,
         slug: c.slug,
-        img: c.image_url || FALLBACK_IMAGES[c.slug] || catDesks,
+        img: imageSrc(c.image_url) || FALLBACK_IMAGES[c.slug] || catDesks,
         count: `${counts.get(c.id) ?? 0} product${(counts.get(c.id) ?? 0) === 1 ? "" : "s"}`,
       }));
     },
@@ -212,7 +213,7 @@ function Home() {
               {brands.map((b) => (
                 <Link key={b.id} to="/shop" search={{ brand: b.slug }} className="group inline-flex items-center gap-2">
                   {b.logo_url ? (
-                    <img src={b.logo_url} alt={b.name} loading="lazy" className="h-8 w-auto max-w-[120px] object-contain opacity-70 transition-opacity group-hover:opacity-100" />
+                    <img src={imageSrc(b.logo_url)!} alt={b.name} loading="lazy" className="h-8 w-auto max-w-[120px] object-contain opacity-70 transition-opacity group-hover:opacity-100" />
                   ) : (
                     <span className="text-xl font-bold tracking-tight text-muted-foreground/70 transition-colors group-hover:text-foreground">{b.name}</span>
                   )}

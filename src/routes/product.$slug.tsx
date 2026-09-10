@@ -10,6 +10,7 @@ import { formatKES, discountPercent } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { ProductCard, type ProductLike } from "@/components/site/ProductCard";
+import { imageSrc } from "@/lib/media";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -135,7 +136,7 @@ function ProductDetail() {
           <div>
             <div className="aspect-square overflow-hidden rounded-xl border border-border bg-muted">
               {images[active] ? (
-                <img src={images[active]} alt={product.name} className="h-full w-full object-cover" />
+                <img src={imageSrc(images[active])!} alt={product.name} className="h-full w-full object-cover" />
               ) : (
                 <div className="grid h-full place-items-center text-sm text-muted-foreground">No image</div>
               )}
@@ -148,7 +149,7 @@ function ProductDetail() {
                     onClick={() => setActive(i)}
                     className={`h-16 w-16 overflow-hidden rounded-md border ${i === active ? "border-primary" : "border-border"}`}
                   >
-                    <img src={img} alt="" className="h-full w-full object-cover" />
+                    <img src={imageSrc(img)!} alt="" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>
