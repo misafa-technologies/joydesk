@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader2, Eye, Printer, Lock } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { absoluteImageSrc } from "@/lib/media";
 
 export const Route = createFileRoute("/admin/orders")({
   head: () => ({
@@ -179,7 +180,7 @@ function AdminOrders() {
         tagline: branding?.tagline,
         supportPhone: branding?.support_phone,
         supportEmail: branding?.support_email,
-        logoUrl: branding?.logo_url,
+        logoUrl: absoluteImageSrc(branding?.logo_url),
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not build the delivery note");
