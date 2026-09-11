@@ -39,9 +39,10 @@ export const Route = createFileRoute("/api/public/media/$")({
         if (url && key) {
           for (const kind of ["public", "authenticated"] as const) {
             try {
-              const res = await fetch(`${url}/storage/v1/object/${kind}/${BUCKET}/${encoded}`, {
-                headers: { apikey: key, Authorization: `Bearer ${key}` },
-              });
+              // New-format keys (sb_publishable_…) are opaque, not JWTs.
+              const headers: Record<string, string> = { apikey: key };
+              if (!key.startsWith("sb_")) headers["Authorization"] = `Bearer ${key}`;
+              const res = await fetch(`${url}/storage/v1/object/${kind}/${BUCKET}/${encoded}`, { headers });
               if (res.ok && res.body) {
                 return new Response(res.body, {
                   headers: {
