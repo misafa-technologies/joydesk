@@ -3,11 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 const BUCKET = "media";
 
 /**
- * Same-origin image proxy for the private `media` bucket.
+ * Same-origin image proxy for the `media` bucket.
  *
  * Storing signed storage links in the database is fragile: the token can expire
  * and the URL is tied to one backend host. Instead we store bucket paths and
  * serve them from whatever domain the site is running on.
+ *
+ * Reads go through the publishable key (a public SELECT policy covers the
+ * bucket), so the route works on hosts where the service-role key is not
+ * configured (e.g. Vercel). The service-role client is only a fallback.
  */
 export const Route = createFileRoute("/api/public/media/$")({
   server: {
@@ -21,16 +25,55 @@ export const Route = createFileRoute("/api/public/media/$")({
           return new Response("Not found", { status: 404 });
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data, error } = await supabaseAdmin.storage.from(BUCKET).download(path);
-        if (error || !data) return new Response("Not found", { status: 404 });
+        const url =
+          process.env["SUPABASE_URL"] ||
+          process.env["VITE_SUPABASE_URL"] ||
+          import.meta.env.VITE_SUPABASE_URL;
+        const key =
+          process.env["SUPABASE_PUBLISHABLE_KEY"] ||
+          process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+          import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-        return new Response(data.stream(), {
-          headers: {
-            "content-type": data.type || "application/octet-stream",
-            "cache-control": "public, max-age=31536000, immutable",
-          },
-        });
+        const encoded = path.split("/").map(encodeURIComponent).join("/");
+
+        if (url && key) {
+          for (const kind of ["public", "authenticated"] as const) {
+            try {
+              // New-format keys (sb_publishable_…) are opaque, not JWTs.
+              const headers: Record<string, string> = { apikey: key };
+              if (!key.startsWith("sb_")) headers["Authorization"] = `Bearer ${key}`;
+              const res = await fetch(`${url}/storage/v1/object/${kind}/${BUCKET}/${encoded}`, { headers });
+              if (res.ok && res.body) {
+                return new Response(res.body, {
+                  headers: {
+                    "content-type": res.headers.get("content-type") || "application/octet-stream",
+                    "cache-control": "public, max-age=31536000, immutable",
+                  },
+                });
+              }
+            } catch {
+              // try the next strategy
+            }
+          }
+        }
+
+        // Fallback: service-role download (available on Lovable Cloud hosting).
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data, error } = await supabaseAdmin.storage.from(BUCKET).download(path);
+          if (!error && data) {
+            return new Response(data.stream(), {
+              headers: {
+                "content-type": data.type || "application/octet-stream",
+                "cache-control": "public, max-age=31536000, immutable",
+              },
+            });
+          }
+        } catch {
+          // fall through to 404
+        }
+
+        return new Response("Not found", { status: 404 });
       },
     },
   },
