@@ -37,7 +37,6 @@ import {
 import { Loader2, Plus, Pencil, Trash2, Minus } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { ImageUploader } from "@/components/admin/ImageUploader";
-import { imageSrc } from "@/lib/media";
 
 export const Route = createFileRoute("/admin/products")({
   head: () => ({
