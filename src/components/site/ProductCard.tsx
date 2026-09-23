@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { formatKES, discountPercent } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
 import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export interface ProductLike {
   id: string;
@@ -31,7 +32,7 @@ export function ProductCard({ product }: { product: ProductLike }) {
         className="relative block aspect-[4/3] overflow-hidden bg-muted"
       >
         {image ? (
-          <img
+          <MediaImage
             src={image}
             alt={product.name}
             loading="lazy"

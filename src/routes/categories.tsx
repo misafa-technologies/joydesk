@@ -4,7 +4,7 @@ import { LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({
@@ -72,8 +72,8 @@ function CategoriesPage() {
               >
                 <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
                   {c.image_url ? (
-                    <img
-                      src={imageSrc(c.image_url)!}
+                    <MediaImage
+                      src={c.image_url}
                       alt={c.name}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

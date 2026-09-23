@@ -4,7 +4,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { useCart } from "@/hooks/use-cart";
 import { formatKES } from "@/lib/format";
-import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -42,7 +42,7 @@ function CartPage() {
               {cart.items.map((i) => (
                 <div key={i.id} className="flex gap-4 p-4">
                   <Link to="/product/$slug" params={{ slug: i.slug }} className="h-24 w-24 shrink-0 overflow-hidden rounded-md bg-muted">
-                    {i.image && <img src={imageSrc(i.image)!} alt={i.name} className="h-full w-full object-cover" />}
+                    {i.image && <MediaImage src={i.image} alt={i.name} className="h-full w-full object-cover" />}
                   </Link>
                   <div className="flex flex-1 flex-col">
                     <Link to="/product/$slug" params={{ slug: i.slug }} className="text-sm font-semibold hover:text-primary">

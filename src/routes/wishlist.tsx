@@ -8,7 +8,7 @@ import { Footer } from "@/components/site/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { formatKES } from "@/lib/format";
-import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
@@ -77,7 +77,7 @@ function WishlistPage() {
               return (
                 <div key={w.id} className="flex items-center gap-4 p-4">
                   <Link to="/product/$slug" params={{ slug: p.slug }} className="h-20 w-20 overflow-hidden rounded-md bg-muted">
-                    {p.images?.[0] && <img src={imageSrc(p.images[0])!} alt={p.name} className="h-full w-full object-cover" />}
+                    {p.images?.[0] && <MediaImage src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />}
                   </Link>
                   <div className="flex-1">
                     <Link to="/product/$slug" params={{ slug: p.slug }} className="text-sm font-semibold hover:text-primary">
