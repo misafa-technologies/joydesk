@@ -17,6 +17,39 @@ export function mediaUrl(path: string) {
   return `/api/public/media/${path.split("/").map(encodeURIComponent).join("/")}`;
 }
 
+/** Returns the bucket-relative path from legacy links, proxy links or bare paths. */
+export function mediaPath(value?: string | null): string | null {
+  const raw = value?.trim();
+  if (!raw) return null;
+
+  const storageMatch = raw.match(/\/storage\/v1\/object\/(?:sign|public|authenticated)\/media\/([^?]+)/);
+  const proxyMatch = raw.match(/\/api\/public\/media\/([^?]+)/);
+  const encodedPath = storageMatch?.[1] ?? proxyMatch?.[1];
+  if (encodedPath) {
+    try {
+      return decodeURIComponent(encodedPath).replace(/^\/+/, "");
+    } catch {
+      return encodedPath.replace(/^\/+/, "");
+    }
+  }
+
+  if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:") || raw.startsWith("blob:") || raw.startsWith("/")) {
+    return null;
+  }
+
+  return raw.replace(/^\/+/, "");
+}
+
+/** Creates a fresh storage-signed URL without depending on the website host. */
+export async function signedMediaUrl(value?: string | null): Promise<string | null> {
+  const path = mediaPath(value);
+  if (!path) return imageSrc(value);
+
+  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 60 * 60 * 6);
+  if (error) throw new Error(error.message);
+  return data.signedUrl;
+}
+
 /**
  * Uploads an image to the `media` bucket and returns a domain-independent link
  * that is served through this site itself (no expiring tokens).
@@ -50,8 +83,8 @@ export function imageSrc(value?: string | null): string | null {
   if (!raw) return null;
 
   // Legacy Supabase storage links (signed or public) -> same-origin proxy.
-  const match = raw.match(/\/storage\/v1\/object\/(?:sign|public|authenticated)\/media\/([^?]+)/);
-  if (match?.[1]) return mediaUrl(decodeURIComponent(match[1]));
+  const path = mediaPath(raw);
+  if (path) return mediaUrl(path);
 
   if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:") || raw.startsWith("/")) {
     return raw;
