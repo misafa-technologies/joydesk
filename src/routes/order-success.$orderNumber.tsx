@@ -11,7 +11,7 @@ import { formatKES, formatDateTime } from "@/lib/format";
 import { checkMpesaPayment, startMpesaPayment } from "@/lib/mpesa.functions";
 import { downloadReceipt as downloadReceiptFile, previewReceipt } from "@/lib/receipt";
 import { paymentLink, trackingLink } from "@/lib/site";
-import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export const Route = createFileRoute("/order-success/$orderNumber")({
   head: ({ params }) => ({
@@ -153,7 +153,7 @@ function OrderSuccess() {
             {items.map((i) => (
               <li key={i.id} className="flex items-center gap-4 p-4">
                 <div className="h-14 w-14 overflow-hidden rounded-md bg-muted">
-                  {i.product_image && <img src={imageSrc(i.product_image)!} alt={i.product_name} className="h-full w-full object-cover" />}
+                  {i.product_image && <MediaImage src={i.product_image} alt={i.product_name} className="h-full w-full object-cover" />}
                 </div>
                 <div className="flex-1 text-sm">
                   <div className="font-medium">{i.product_name}</div>

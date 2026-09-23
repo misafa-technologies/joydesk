@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { MediaImage } from "@/components/site/MediaImage";
 import { formatKES } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -411,7 +412,7 @@ function AdminProducts() {
                       <TableRow key={p.id}>
                         <TableCell>
                           {p.images?.[0] ? (
-                            <img src={imageSrc(p.images[0])!} alt={p.name} className="h-10 w-10 rounded-md border border-border object-cover" />
+                            <MediaImage src={p.images[0]} alt={p.name} className="h-10 w-10 rounded-md border border-border object-cover" />
                           ) : (
                             <div className="h-10 w-10 rounded-md border border-dashed border-border bg-muted" />
                           )}
@@ -606,7 +607,7 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
                     aria-label="Edit category image"
                   >
                     {c.image_url ? (
-                      <img src={imageSrc(c.image_url)!} alt={c.name} className="h-9 w-9 rounded-md border border-border object-cover" />
+                      <MediaImage src={c.image_url} alt={c.name} className="h-9 w-9 rounded-md border border-border object-cover" />
                     ) : (
                       <div className="grid h-9 w-9 place-items-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">img</div>
                     )}
@@ -654,7 +655,7 @@ function TaxonomyManager({ categories, brands }: { categories: Category[]; brand
                     aria-label="Edit brand logo"
                   >
                     {b.logo_url ? (
-                      <img src={imageSrc(b.logo_url)!} alt={b.name} className="h-9 w-9 rounded-md border border-border object-cover" />
+                      <MediaImage src={b.logo_url} alt={b.name} className="h-9 w-9 rounded-md border border-border object-cover" />
                     ) : (
                       <div className="grid h-9 w-9 place-items-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">logo</div>
                     )}
