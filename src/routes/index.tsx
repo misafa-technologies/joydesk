@@ -11,6 +11,7 @@ import catDesks from "@/assets/cat-desks.jpg";
 import catLaptops from "@/assets/cat-laptops.jpg";
 import catMonitors from "@/assets/cat-monitors.jpg";
 import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -152,7 +153,7 @@ function Home() {
           {CATEGORIES.map((c) => (
             <Link key={c.name} to="/shop" search={{ category: c.slug }} className="group rounded-md border border-border bg-card p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
               <div className="aspect-square overflow-hidden rounded-xl bg-muted/40">
-                <img src={c.img} alt={c.name} loading="lazy" width={800} height={800} className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                <MediaImage src={c.img} alt={c.name} loading="lazy" width={800} height={800} className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500" />
               </div>
               <h3 className="mt-3 text-sm font-semibold">{c.name}</h3>
               <p className="text-xs text-muted-foreground">{c.count}</p>
@@ -213,7 +214,7 @@ function Home() {
               {brands.map((b) => (
                 <Link key={b.id} to="/shop" search={{ brand: b.slug }} className="group inline-flex items-center gap-2">
                   {b.logo_url ? (
-                    <img src={imageSrc(b.logo_url)!} alt={b.name} loading="lazy" className="h-8 w-auto max-w-[120px] object-contain opacity-70 transition-opacity group-hover:opacity-100" />
+                    <MediaImage src={b.logo_url} alt={b.name} loading="lazy" className="h-8 w-auto max-w-[120px] object-contain opacity-70 transition-opacity group-hover:opacity-100" />
                   ) : (
                     <span className="text-xl font-bold tracking-tight text-muted-foreground/70 transition-colors group-hover:text-foreground">{b.name}</span>
                   )}

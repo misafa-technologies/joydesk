@@ -4,7 +4,7 @@ import { Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export const Route = createFileRoute("/brands")({
   head: () => ({
@@ -72,7 +72,7 @@ function BrandsPage() {
               >
                 <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-muted">
                   {b.logo_url ? (
-                    <img src={imageSrc(b.logo_url)!} alt={b.name} className="h-full w-full object-contain p-2" />
+                    <MediaImage src={b.logo_url} alt={b.name} className="h-full w-full object-contain p-2" />
                   ) : (
                     <span className="text-lg font-bold text-muted-foreground">{b.name[0]}</span>
                   )}

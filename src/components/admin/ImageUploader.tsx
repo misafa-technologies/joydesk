@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2, Trash2, Link2 } from "lucide-react";
 import { toast } from "sonner";
-import { uploadImage, imageSrc } from "@/lib/media";
+import { uploadImage } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -95,7 +96,7 @@ export function ImageUploader({ value, onChange, folder, multiple = false, label
         <div className="flex flex-wrap gap-3">
           {value.map((url) => (
             <div key={url} className="group relative h-20 w-20 overflow-hidden rounded-md border border-border bg-muted">
-              <img src={imageSrc(url) ?? url} alt="" className="h-full w-full object-cover" />
+              <MediaImage src={url} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"
                 aria-label="Remove image"

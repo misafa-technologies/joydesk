@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatKES } from "@/lib/format";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 export const Route = createFileRoute("/quote")({
   head: () => ({
@@ -212,7 +212,7 @@ function QuotePage() {
               ) : (
                 visible.map((p) => {
                   const active = !!picked[p.id];
-                  const image = imageSrc(Array.isArray(p.images) ? (p.images[0] as string | undefined) : undefined);
+                  const image = Array.isArray(p.images) ? (p.images[0] as string | undefined) : undefined;
                   return (
                     <div key={p.id} className={`flex items-center gap-3 rounded-md border p-2 transition-colors ${active ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted/50"}`}>
                       <button
@@ -224,7 +224,7 @@ function QuotePage() {
                         <span className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${active ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}>
                           {active && <Check className="h-3.5 w-3.5" />}
                         </span>
-                        {image && <img src={image} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded object-cover" />}
+                        {image && <MediaImage src={image} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded object-cover" />}
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-medium">{p.name}</span>
                           <span className="block text-xs text-muted-foreground">{formatKES(p.price)}</span>

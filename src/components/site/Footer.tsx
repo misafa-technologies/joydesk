@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Facebook, Instagram, Twitter, Linkedin, Youtube, Music2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { imageSrc } from "@/lib/media";
+import { MediaImage } from "@/components/site/MediaImage";
 
 const COLS: { title: string; links: { label: string; to: string }[] }[] = [
   {
@@ -73,8 +73,8 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2">
               {storeSettings?.logo_url ? (
-                <img
-                  src={imageSrc(storeSettings.logo_url)!}
+                <MediaImage
+                  src={storeSettings.logo_url}
                   alt={storeName}
                   className="h-10 w-auto max-w-[10rem] object-contain sm:h-12 sm:max-w-[13rem]"
                 />
